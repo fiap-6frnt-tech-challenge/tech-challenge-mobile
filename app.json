@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "aa",
-    "slug": "aa",
+    "name": "bytebank-mobile",
+    "slug": "bytebank-mobile",
     "version": "1.0.0",
 
+    "scheme": "bytebank-mobile",
+    "platforms": ["ios", "android"],
     "web": {
+      "bundler": "metro",
+      "output": "static",
       "favicon": "./assets/favicon.png"
     },
-
-    "experiments": {
-      "tsconfigPaths": true
-    },
-
     "plugins": [
+      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -21,6 +21,11 @@
         }
       ]
     ],
+    "experiments": {
+      "typedRoutes": true,
+
+      "tsconfigPaths": true
+    },
 
     "orientation": "portrait",
     "icon": "./assets/icon.png",
