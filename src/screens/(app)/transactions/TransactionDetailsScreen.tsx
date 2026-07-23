@@ -1,7 +1,5 @@
-import { Text } from "react-native";
+import { Text } from 'react-native';
 
 export default function TransactionDetailsScreen() {
-  return (
-    <Text>TransactionDetails</Text>
-  )
+  return <Text>TransactionDetails</Text>;
 }
