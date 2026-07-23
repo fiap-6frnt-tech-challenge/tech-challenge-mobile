@@ -38,7 +38,7 @@ describe('suggestCategory', () => {
     'returns null for unmatched description "%s"',
     (description) => {
       expect(suggestCategory(description)).toBeNull();
-    },
+    }
   );
 
   it.each([

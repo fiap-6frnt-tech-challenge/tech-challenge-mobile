@@ -58,7 +58,7 @@ describe('transactionFormSchema invalid cases', () => {
 
   it('rejects description with more than 140 characters', () => {
     expect(() =>
-      transactionFormSchema.parse({ ...validInput, description: 'a'.repeat(141) }),
+      transactionFormSchema.parse({ ...validInput, description: 'a'.repeat(141) })
     ).toThrow();
   });
 
