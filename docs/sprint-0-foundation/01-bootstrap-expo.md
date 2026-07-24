@@ -76,10 +76,10 @@ Adicionar scripts em `package.json`:
 
 ## Validação
 
-- [ ] `npx expo start` abre o Metro; app carrega em Expo Go (device/emulador)
-- [ ] `import x from '@/...'` resolve (alias funciona)
-- [ ] `npm run typecheck` passa
-- [ ] Estrutura de pastas `src/*` commitada (com `.gitkeep` onde vazio)
+- [x] `npx expo start` abre o Metro; app carrega em Expo Go (device/emulador) — bundling validado via `npx expo export --platform android` (3427 módulos, sem erro); não testado ainda em device/Expo Go real
+- [x] `import x from '@/...'` resolve (alias funciona) — alias real é `"@/*": ["./*"]` (raiz do repo), não `./src/*` como no snippet acima; convenção documentada no CLAUDE.md
+- [x] `npm run typecheck` passa
+- [x] Estrutura de pastas `src/*` commitada (com `.gitkeep` onde vazio) — pastas e `.gitkeep` criados no disco; commit pendente (não commitamos automaticamente neste projeto)
 
 ---
 
