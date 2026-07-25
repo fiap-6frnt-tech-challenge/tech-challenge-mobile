@@ -1,4 +1,8 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
+const {
+  withStorybook,
+} = require('@storybook/react-native/withStorybook');
+
 const { getDefaultConfig } = require('expo/metro-config');
 
 const { withNativeWind } = require('nativewind/metro');
@@ -7,4 +11,6 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withNativeWind(config, { input: './global.css' });
+module.exports = withStorybook(withNativeWind(config, { input: './global.css' }), {
+  enabled: process.env.EXPO_PUBLIC_STORYBOOK === 'true',
+});

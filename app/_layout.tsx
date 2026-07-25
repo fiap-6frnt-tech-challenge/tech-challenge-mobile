@@ -9,6 +9,7 @@ export default function Layout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(app)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="storybook" />
       </Stack>
     </SafeAreaProvider>
   );
