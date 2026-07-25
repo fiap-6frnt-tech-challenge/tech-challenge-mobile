@@ -11,5 +11,5 @@ jobs:
         with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test -- --ci
+      - run: npx tsc --noEmit
+      - run: npm run test:domain

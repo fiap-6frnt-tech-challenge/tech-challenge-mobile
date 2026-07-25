@@ -27,7 +27,6 @@
     "@storybook/addon-ondevice-controls": "^10.5.2",
     "@storybook/react-native": "^10.5.2",
     "@storybook/react-native-ui-lite": "^10.5.2",
-    "@testing-library/react-native": "^14.0.1",
     "cross-env": "^10.1.0",
     "expo": "~56.0.17",
     "expo-constants": "~56.0.15",
@@ -58,8 +57,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@types/jest": "^30.0.0",
+    "@babel/core": "^7.20.0",    
+    "@testing-library/react-native": "^14.0.1",    
+    "@types/jest": "^29.0.0",
     "@types/react": "~19.2.2",
     "eslint": "^9.25.1",
     "eslint-config-expo": "~56.0.4",
