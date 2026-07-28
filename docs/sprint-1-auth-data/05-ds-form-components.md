@@ -27,11 +27,11 @@ Todos aceitam serem controlados por RHF `Controller` (`value`/`onChangeText`/`on
 
 ## Validação
 
-- [ ] `TextField` mostra `error` abaixo do campo e muda a borda
-- [ ] `CurrencyInput` formata `1234.5` → `R$ 1.234,50` e devolve `number`
-- [ ] `DatePicker` abre o picker nativo e retorna ISO
-- [ ] Todos navegáveis por teclado externo/leitor de tela (`accessibilityLabel`)
-- [ ] Stories no Storybook para cada componente (estados normal/erro/disabled)
+- [x] `TextField` mostra `error` abaixo do campo e muda a borda
+- [x] `CurrencyInput` formata `1234.5` → `R$ 1.234,50` e devolve `number`
+- [x] `DatePicker` abre o picker nativo e retorna ISO
+- [x] Todos navegáveis por teclado externo/leitor de tela (`accessibilityLabel`)
+- [x] Stories no Storybook para cada componente (estados normal/erro/disabled)
 
 ## Gotchas
 
