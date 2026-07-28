@@ -1,15 +1,16 @@
 import { createContext, useContext, type ReactNode } from 'react';
 
-import { colors, radius, spacing, typography } from './tokens';
+import { charts, colors, radius, spacing, typography } from './tokens';
 
 export type Theme = {
   colors: typeof colors;
+  charts: typeof charts;
   spacing: typeof spacing;
   radius: typeof radius;
   typography: typeof typography;
 };
 
-const theme: Theme = { colors, spacing, radius, typography };
+const theme: Theme = { colors, charts, spacing, radius, typography };
 
 const ThemeContext = createContext<Theme | undefined>(undefined);
 
