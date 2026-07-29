@@ -1,3 +1,5 @@
+import type { CategoryId } from '@/src/domain/categories';
+
 export const colors = {
   // Brand
   primary: '#6841f2',
@@ -46,6 +48,25 @@ export const colors = {
   chartOrange: '#f97316',
   chartGreen: '#1cc060',
   chartRed: '#ff3631',
+};
+
+export const charts = {
+  income: '#2a78d6',
+  expense: '#e34948',
+  balance: colors.primary,
+  grid: '#e5e5ea',
+  axis: '#c2c2c2',
+  categories: {
+    food: '#2a78d6',
+    transport: '#eb6834',
+    leisure: '#1baf7a',
+    health: '#eda100',
+    education: '#e87ba4',
+    housing: '#008300',
+    salary: '#4a3aa7',
+    transfer: '#e34948',
+    other: '#5c6070',
+  } satisfies Record<CategoryId, string>,
 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, '2xl': 32 };

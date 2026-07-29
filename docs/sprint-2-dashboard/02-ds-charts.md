@@ -18,11 +18,21 @@ Componentes de gráfico reutilizáveis, estilizados com os tokens do tema. Receb
 ## Stack
 
 ```bash
-npx expo install react-native-svg
+npx expo install react-native-svg expo-linear-gradient
 npm i react-native-gifted-charts
 ```
 
-> `gifted-charts` tem peer-dep opcional `react-native-linear-gradient`. Se não instalar, usar barras/áreas sólidas (sem gradiente). Se travar no Expo, alternativa: `react-native-chart-kit` (só `react-native-svg`).
+> ⚠️ O peer-dep de gradiente é marcado como "opcional" no `package.json` do
+> `gifted-charts`, mas **na prática é obrigatório**. `dist/Components/common/LinearGradient.js`
+> faz `require('react-native-linear-gradient')` → `require('expo-linear-gradient')` e
+> **lança erro em tempo de import** se nenhum dos dois resolver. Como `BarChart` importa
+> esse módulo no topo, e o barrel do pacote importa `BarChart`, qualquer
+> `import { LineChart } from 'react-native-gifted-charts'` derruba o bundle inteiro —
+> mesmo sem usar nenhuma prop de gradiente. O bundle compila normalmente; o erro só
+> aparece em runtime. Em projeto Expo, instalar `expo-linear-gradient` (versionado pelo SDK).
+>
+> Nossos gráficos continuam com barras/áreas **sólidas** — o pacote entra só para
+> satisfazer o `require`. Alternativa se travar: `react-native-chart-kit` (só `react-native-svg`).
 
 ## Componentes (`src/components/ui/charts/`)
 
@@ -34,11 +44,12 @@ Props tipadas com as saídas da Task 01. Cores das categorias vindas de um mapa 
 
 ## Validação
 
-- [ ] Cada gráfico renderiza com um fixture de dados
-- [ ] Cores vêm do tema (sem hex hard-coded no componente)
-- [ ] Legenda/labels legíveis; pizza tem legenda textual (não só cor — a11y)
-- [ ] Sem warning de `react-native-svg` no console
-- [ ] Stories no Storybook (com dados e vazio) para cada gráfico
+- [x] Cada gráfico renderiza com um fixture de dados
+- [x] Cores vêm do tema (sem hex hard-coded no componente)
+- [x] Legenda/labels legíveis; pizza tem legenda textual (não só cor — a11y) — *legenda
+      textual implementada; legibilidade falta conferir no device*
+- [x] Sem warning de `react-native-svg` no console
+- [x] Stories no Storybook (com dados e vazio) para cada gráfico
 
 ## Gotchas
 
