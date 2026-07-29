@@ -1,18 +1,13 @@
-import type { User } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  type User,
+} from 'firebase/auth';
 import { deleteObject, getDownloadURL, getMetadata, ref, uploadBytes } from 'firebase/storage';
-import { Platform } from 'react-native';
 
 import { auth, storage } from '@/src/services/firebase';
-
-type FirebaseAuthModule = typeof import('firebase/auth');
-
-function getFirebaseAuthModule(): FirebaseAuthModule {
-  if (Platform.OS === 'web') {
-    return require('firebase/auth') as FirebaseAuthModule;
-  }
-
-  return require('firebase/auth/react-native') as FirebaseAuthModule;
-}
 
 export type SpikeAuthResult = {
   uid: string | null;
@@ -48,8 +43,6 @@ function isUserNotFound(error: unknown): boolean {
 }
 
 export function waitForAuthState(): Promise<User | null> {
-  const { onAuthStateChanged } = getFirebaseAuthModule();
-
   return new Promise((resolve, reject) => {
     const unsubscribe = onAuthStateChanged(
       auth,
@@ -69,8 +62,6 @@ export async function signInOrCreateSpikeUser(
   email: string,
   password: string
 ): Promise<SpikeAuthResult> {
-  const { createUserWithEmailAndPassword, signInWithEmailAndPassword } = getFirebaseAuthModule();
-
   try {
     const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
     return toAuthResult(credential.user, 'signed-in');
@@ -87,8 +78,6 @@ export function getCurrentSpikeSession(): SpikeAuthResult {
 }
 
 export async function signOutSpikeUser(): Promise<void> {
-  const { signOut } = getFirebaseAuthModule();
-
   await signOut(auth);
 }
 

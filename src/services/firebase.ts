@@ -1,8 +1,9 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import type { Auth } from 'firebase/auth';
+// @ts-expect-error Firebase exposes this through its React Native runtime condition, but not its wrapper types.
+import { getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { Platform } from 'react-native';
 
 function requiredEnv(name: string, value: string | undefined): string {
   if (!value) {
@@ -35,18 +36,9 @@ const firebaseConfig: FirebaseOptions = {
 
 export const app = initializeApp(firebaseConfig);
 
-function getFirebaseAuth(): Auth {
-  if (Platform.OS === 'web') {
-    const { getAuth } = require('firebase/auth') as typeof import('firebase/auth');
-    return getAuth(app);
-  }
-
-  const { getAuth } =
-    require('firebase/auth/react-native') as typeof import('firebase/auth/react-native');
-  return getAuth(app);
-}
-
-export const auth = getFirebaseAuth();
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
 
 export const db = getFirestore(app);
 export const storage = getStorage(app);
