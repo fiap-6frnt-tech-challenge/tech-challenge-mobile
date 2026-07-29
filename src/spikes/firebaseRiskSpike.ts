@@ -90,18 +90,21 @@ export async function runStorageUploadDeleteSpike(uid: string): Promise<SpikeSto
       source: 'firebase-risk-spike',
     },
   });
-  const [metadata, downloadUrl] = await Promise.all([
-    getMetadata(uploadResult.ref),
-    getDownloadURL(uploadResult.ref),
-  ]);
 
-  await deleteObject(uploadResult.ref);
+  try {
+    const [metadata, downloadUrl] = await Promise.all([
+      getMetadata(uploadResult.ref),
+      getDownloadURL(uploadResult.ref),
+    ]);
 
-  return {
-    fullPath,
-    downloadUrl,
-    contentType: metadata.contentType,
-    size: metadata.size,
-    deleted: true,
-  };
+    return {
+      fullPath,
+      downloadUrl,
+      contentType: metadata.contentType,
+      size: metadata.size,
+      deleted: true,
+    };
+  } finally {
+    await deleteObject(uploadResult.ref);
+  }
 }
