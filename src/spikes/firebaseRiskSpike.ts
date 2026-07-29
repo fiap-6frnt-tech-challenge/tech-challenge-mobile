@@ -33,12 +33,12 @@ function toAuthResult(user: User | null, operation: SpikeAuthResult['operation']
   };
 }
 
-function isUserNotFound(error: unknown): boolean {
+function isEmailAlreadyInUse(error: unknown): boolean {
   return (
     typeof error === 'object' &&
     error !== null &&
     'code' in error &&
-    error.code === 'auth/user-not-found'
+    error.code === 'auth/email-already-in-use'
   );
 }
 
@@ -62,15 +62,17 @@ export async function signInOrCreateSpikeUser(
   email: string,
   password: string
 ): Promise<SpikeAuthResult> {
-  try {
-    const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-    return toAuthResult(credential.user, 'signed-in');
-  } catch (error) {
-    if (!isUserNotFound(error)) throw error;
+  const normalizedEmail = email.trim();
 
-    const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
     return toAuthResult(credential.user, 'created');
+  } catch (error) {
+    if (!isEmailAlreadyInUse(error)) throw error;
   }
+
+  const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+  return toAuthResult(credential.user, 'signed-in');
 }
 
 export function getCurrentSpikeSession(): SpikeAuthResult {
