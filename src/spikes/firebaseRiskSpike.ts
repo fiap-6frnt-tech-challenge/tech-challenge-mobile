@@ -1,10 +1,10 @@
-import type { User } from 'firebase/auth';
+import type { User } from 'firebase/auth/react-native';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-} from 'firebase/auth';
+} from 'firebase/auth/react-native';
 import { deleteObject, getDownloadURL, getMetadata, ref, uploadBytes } from 'firebase/storage';
 
 import { auth, storage } from '@/src/services/firebase';
@@ -34,7 +34,12 @@ function toAuthResult(user: User | null, operation: SpikeAuthResult['operation']
 }
 
 function isUserNotFound(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/user-not-found';
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'auth/user-not-found'
+  );
 }
 
 export function waitForAuthState(): Promise<User | null> {
@@ -48,14 +53,14 @@ export function waitForAuthState(): Promise<User | null> {
       (error) => {
         unsubscribe();
         reject(error);
-      },
+      }
     );
   });
 }
 
 export async function signInOrCreateSpikeUser(
   email: string,
-  password: string,
+  password: string
 ): Promise<SpikeAuthResult> {
   try {
     const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
