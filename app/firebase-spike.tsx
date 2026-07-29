@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -10,15 +10,13 @@ import {
   View,
 } from 'react-native';
 
-import {
-  getCurrentSpikeSession,
-  runStorageUploadDeleteSpike,
-  signInOrCreateSpikeUser,
-  signOutSpikeUser,
-  waitForAuthState,
-  type SpikeAuthResult,
-  type SpikeStorageResult,
-} from '@/src/spikes/firebaseRiskSpike';
+import type { SpikeAuthResult, SpikeStorageResult } from '@/src/spikes/firebaseRiskSpike';
+
+type FirebaseRiskSpikeModule = typeof import('@/src/spikes/firebaseRiskSpike');
+
+async function loadFirebaseRiskSpike(): Promise<FirebaseRiskSpikeModule> {
+  return import('@/src/spikes/firebaseRiskSpike');
+}
 
 type Status = {
   kind: 'idle' | 'loading' | 'success' | 'error';
@@ -59,7 +57,7 @@ export default function FirebaseSpikeScreen() {
   const [authResult, setAuthResult] = useState<SpikeAuthResult | null>(null);
   const [storageResult, setStorageResult] = useState<SpikeStorageResult | null>(null);
 
-  const currentUid = useMemo(() => authResult?.uid ?? getCurrentSpikeSession().uid, [authResult]);
+  const currentUid = authResult?.uid ?? null;
 
   if (!__DEV__) {
     return (
@@ -76,6 +74,7 @@ export default function FirebaseSpikeScreen() {
     setStorageResult(null);
 
     try {
+      const { signInOrCreateSpikeUser } = await loadFirebaseRiskSpike();
       const result = await signInOrCreateSpikeUser(email, password);
       setAuthResult(result);
       setStatus({ kind: 'success', message: 'Auth sign-in/create succeeded.' });
@@ -88,6 +87,7 @@ export default function FirebaseSpikeScreen() {
     setStatus({ kind: 'loading', message: 'Reading persisted Firebase Auth state...' });
 
     try {
+      const { waitForAuthState } = await loadFirebaseRiskSpike();
       const user = await waitForAuthState();
       const result: SpikeAuthResult = {
         uid: user?.uid ?? null,
@@ -119,6 +119,7 @@ export default function FirebaseSpikeScreen() {
     });
 
     try {
+      const { runStorageUploadDeleteSpike } = await loadFirebaseRiskSpike();
       const result = await runStorageUploadDeleteSpike(currentUid);
       setStorageResult(result);
       setStatus({ kind: 'success', message: 'Storage upload/delete succeeded.' });
@@ -131,6 +132,7 @@ export default function FirebaseSpikeScreen() {
     setStatus({ kind: 'loading', message: 'Signing out...' });
 
     try {
+      const { getCurrentSpikeSession, signOutSpikeUser } = await loadFirebaseRiskSpike();
       await signOutSpikeUser();
       const result = getCurrentSpikeSession();
       setAuthResult(result);
