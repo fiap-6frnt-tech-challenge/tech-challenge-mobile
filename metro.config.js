@@ -1,7 +1,5 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
-const {
-  withStorybook,
-} = require('@storybook/react-native/withStorybook');
+const { withStorybook } = require('@storybook/react-native/withStorybook');
 
 const { getDefaultConfig } = require('expo/metro-config');
 
