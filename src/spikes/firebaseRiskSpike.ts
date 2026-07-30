@@ -85,14 +85,14 @@ export async function signOutSpikeUser(): Promise<void> {
 
 export async function runStorageUploadDeleteSpike(uid: string): Promise<SpikeStorageResult> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fullPath = `receipts/${uid}/spike/firebase-storage-spike-${timestamp}.txt`;
+  const fullPath = `receipts/${uid}/spike/firebase-storage-spike-${timestamp}.pdf`;
   const storageRef = ref(storage, fullPath);
-  const blob = new Blob([`bytebank firebase storage spike ${timestamp}`], {
-    type: 'text/plain',
+  const blob = new Blob([`%PDF-1.4\n% Bytebank Firebase Storage spike ${timestamp}\n%%EOF`], {
+    type: 'application/pdf',
   });
 
   const uploadResult = await uploadBytes(storageRef, blob, {
-    contentType: 'text/plain',
+    contentType: 'application/pdf',
     customMetadata: {
       source: 'firebase-risk-spike',
     },
