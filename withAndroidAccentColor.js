@@ -1,5 +1,7 @@
 const { AndroidConfig, withAndroidColors, withAndroidStyles } = require('@expo/config-plugins');
 
+const ACCENT_COLOR = '#6841f2';
+
 function withAndroidAccentColor(config) {
   config = withAndroidColors(config, (config) => {
     config.modResults = AndroidConfig.Colors.assignColorValue(config.modResults, {
