@@ -1,5 +1,5 @@
-import { createContext, ReactNode, useContext, useReducer } from "react";
-import { Transaction } from "../domain";
+import { createContext, ReactNode, useContext, useReducer } from 'react';
+import { Transaction } from '../domain';
 
 interface TransactionState {
   transactions: Transaction[];
@@ -21,10 +21,14 @@ type TransactionAction =
 
 function reducer(state: TransactionState, action: TransactionAction): TransactionState {
   switch (action.type) {
-    case 'LOADING': return { ...state, loading: true, error: null };
-    case 'LOADED': return { ...state, transactions: action.transactions, loading: false, error: null };
-    case 'ERROR': return { ...state, loading: false, error: action.error };
-    default: return state;
+    case 'LOADING':
+      return { ...state, loading: true, error: null };
+    case 'LOADED':
+      return { ...state, transactions: action.transactions, loading: false, error: null };
+    case 'ERROR':
+      return { ...state, loading: false, error: action.error };
+    default:
+      return state;
   }
 }
 
