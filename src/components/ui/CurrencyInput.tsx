@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme, type Theme } from '@/src/theme';
 import { Text } from './Text';
+import { formatBRL } from './currency';
 
 export interface CurrencyInputProps {
   label?: string;
@@ -14,15 +15,6 @@ export interface CurrencyInputProps {
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
   testID?: string;
-}
-
-const currencyFormatter = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-});
-
-function formatBRL(valueInReais: number): string {
-  return currencyFormatter.format(valueInReais).replace(/ /g, ' ');
 }
 
 export function CurrencyInput({
