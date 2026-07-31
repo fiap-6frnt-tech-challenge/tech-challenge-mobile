@@ -40,7 +40,6 @@ export function KpiCard({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { accent, surface } = toneColors(theme, tone);
-
   const formattedValue = formatBRL(value);
   const trendMeta = trend ? TREND_META[trend] : undefined;
   const TrendIcon = trendMeta?.Icon;
