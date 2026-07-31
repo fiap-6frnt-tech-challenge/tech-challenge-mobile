@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import { getReactNativePersistence, initializeAuth } from 'firebase/auth/react-native';
+// @ts-expect-error Firebase exposes this through its React Native runtime condition, but not its wrapper types.
+import { getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
