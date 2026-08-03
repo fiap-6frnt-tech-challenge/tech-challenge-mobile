@@ -44,9 +44,7 @@ describe('authService', () => {
     firestore.serverTimestamp.mockReturnValue(createdAt);
     firestore.setDoc.mockResolvedValue(undefined);
 
-    await expect(
-      authService.signUp('erick@example.com', 'secret123', 'Erick')
-    ).resolves.toBe(user);
+    await expect(authService.signUp('erick@example.com', 'secret123', 'Erick')).resolves.toBe(user);
 
     expect(firebaseAuth.createUserWithEmailAndPassword).toHaveBeenCalledWith(
       firebaseInstances.auth,
@@ -56,15 +54,57 @@ describe('authService', () => {
     expect(firebaseAuth.updateProfile).toHaveBeenCalledWith(user, {
       displayName: 'Erick',
     });
-    expect(firestore.doc).toHaveBeenCalledWith(
-      firebaseInstances.db,
-      'users',
-      'user-123'
-    );
+    expect(firestore.doc).toHaveBeenCalledWith(firebaseInstances.db, 'users', 'user-123');
     expect(firestore.setDoc).toHaveBeenCalledWith(profileRef, {
       name: 'Erick',
       email: 'erick@example.com',
       createdAt,
     });
+  });
+
+  it('returns the authenticated user on sign in', async () => {
+    const user = { uid: 'user-123' };
+    firebaseAuth.signInWithEmailAndPassword.mockResolvedValue({ user });
+
+    await expect(authService.signIn('erick@example.com', 'secret123')).resolves.toBe(user);
+    expect(firebaseAuth.signInWithEmailAndPassword).toHaveBeenCalledWith(
+      firebaseInstances.auth,
+      'erick@example.com',
+      'secret123'
+    );
+  });
+
+  it('signs out from the configured Auth instance', async () => {
+    firebaseAuth.signOut.mockResolvedValue(undefined);
+
+    await expect(authService.signOut()).resolves.toBeUndefined();
+    expect(firebaseAuth.signOut).toHaveBeenCalledWith(firebaseInstances.auth);
+  });
+
+  it('subscribes to auth changes and returns the Firebase unsubscribe function', () => {
+    const callback = vi.fn();
+    const unsubscribe = vi.fn();
+    firebaseAuth.onAuthStateChanged.mockReturnValue(unsubscribe);
+
+    expect(authService.subscribe(callback)).toBe(unsubscribe);
+    expect(firebaseAuth.onAuthStateChanged).toHaveBeenCalledWith(firebaseInstances.auth, callback);
+  });
+
+  it('propagates sign-up errors unchanged', async () => {
+    const error = Object.assign(new Error('email already in use'), {
+      code: 'auth/email-already-in-use',
+    });
+    firebaseAuth.createUserWithEmailAndPassword.mockRejectedValue(error);
+
+    await expect(authService.signUp('erick@example.com', 'secret123', 'Erick')).rejects.toBe(error);
+  });
+
+  it('propagates sign-in errors unchanged', async () => {
+    const error = Object.assign(new Error('wrong password'), {
+      code: 'auth/wrong-password',
+    });
+    firebaseAuth.signInWithEmailAndPassword.mockRejectedValue(error);
+
+    await expect(authService.signIn('erick@example.com', 'wrong')).rejects.toBe(error);
   });
 });
