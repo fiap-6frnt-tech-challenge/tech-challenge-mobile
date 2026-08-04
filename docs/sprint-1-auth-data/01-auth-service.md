@@ -49,9 +49,9 @@ export const authService = {
 
 ## Validação
 
-- [ ] `signUp` cria usuário no Auth + doc `users/{uid}`
-- [ ] `signIn`/`signOut` funcionam
-- [ ] Erros do Firebase (`auth/email-already-in-use`, `auth/wrong-password`) propagam para tratamento na UI
+- [x] `signUp` cria usuário no Auth + doc `users/{uid}`
+- [x] `signIn`/`signOut` funcionam
+- [x] Erros do Firebase (`auth/email-already-in-use`, `auth/wrong-password`) propagam para tratamento na UI
 
 ## Gotchas
 
