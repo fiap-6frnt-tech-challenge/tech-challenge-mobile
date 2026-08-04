@@ -1,5 +1,4 @@
 import type { Preview } from '@storybook/react-native';
-
 import { ThemeProvider } from '../src/theme';
 
 const preview: Preview = {
