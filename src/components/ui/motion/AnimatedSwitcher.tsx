@@ -6,7 +6,7 @@ import { useOptionalAnimatedSectionGroup } from './AnimatedSectionGroup';
 import { MOTION, MOTION_EASING } from './motion';
 
 export interface AnimatedSwitcherProps<T> {
-   value: T;
+  value: T;
   children: (value: T) => ReactNode;
   duration?: number;
   distance?: number;

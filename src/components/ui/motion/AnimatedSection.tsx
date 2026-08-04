@@ -50,7 +50,7 @@ export function AnimatedSection({
   const replayToken = (group?.replayToken ?? 0) + localToken;
   const [progress] = useState(() => new Animated.Value(0));
   const onAnimationCompleteRef = useRef(onAnimationComplete);
-  
+
   useEffect(() => {
     onAnimationCompleteRef.current = onAnimationComplete;
   }, [onAnimationComplete]);
