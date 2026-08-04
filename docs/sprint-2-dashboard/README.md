@@ -24,8 +24,8 @@
 | # | Status | Task | Owner | Duração | Paralela? | Arquivo |
 | --- | --- | --- | --- | --- | --- | --- |
 | 01 | ⏳ | Consolidar agregações portadas e adaptar para dados Firestore | Dev 1 | 1 dia | ✅ | [01-aggregations.md](./01-aggregations.md) |
-| 02 | ⏳ | DS: gráficos Bar, Pie e Line + stories | Dev 2 | 3 dias | ✅ | [02-ds-charts.md](./02-ds-charts.md) |
-| 03 | ⏳ | DS: `KpiCard`, `SummaryTile`, estados vazio/carregando + stories | Dev 2 | 1.5 dia | ✅ | [03-ds-kpi-cards.md](./03-ds-kpi-cards.md) |
+| 02 | 🟢 | DS: gráficos Bar, Pie e Line + stories | Dev 2 | 3 dias | ✅ | [02-ds-charts.md](./02-ds-charts.md) |
+| 03 | 🟢 | DS: `KpiCard`, `SummaryTile`, estados vazio/carregando + stories | Dev 2 | 1.5 dia | ✅ | [03-ds-kpi-cards.md](./03-ds-kpi-cards.md) |
 | 04 | 🟢 | Animações `Animated` entre seções do dashboard | Dev 2 | 2 dias | ⬅ 03 | [04-animated-sections.md](./04-animated-sections.md) |
 | 05 | ⏳ | Hook `useDashboardData` | Dev 3 | 1 dia | ⬅ 01 | [05-hook-dashboard-data.md](./05-hook-dashboard-data.md) |
 | 06 | ⏳ | Tela Dashboard: KPIs + 3 gráficos + insight textual | Dev 3 | 2.5 dias | ⬅ 02, 03, 05 | [06-dashboard-screen.md](./06-dashboard-screen.md) |
