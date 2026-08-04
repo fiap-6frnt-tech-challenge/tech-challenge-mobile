@@ -17,9 +17,7 @@ interface TransactionsContext extends TransactionState {
 }
 
 type TransactionAction =
-  | { type: 'LOADING' }
-  | { type: 'LOADED'; items: Transaction[] }
-  | { type: 'ERROR'; error: string };
+  { type: 'LOADING' } | { type: 'LOADED'; items: Transaction[] } | { type: 'ERROR'; error: string };
 
 function reducer(state: TransactionState, action: TransactionAction): TransactionState {
   switch (action.type) {
@@ -47,12 +45,18 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const refresh = useCallback(async () => {
-    if (!user) {dispatch({ type: 'LOADED', items: [] }); return; }
+    if (!user) {
+      dispatch({ type: 'LOADED', items: [] });
+      return;
+    }
     dispatch({ type: 'LOADING' });
-    try { dispatch({ type: 'LOADED', items: await transactionsService.list(user.uid) }); }
-    catch (e) { dispatch({ type: 'ERROR', error: 'Falha ao carregar transações' }); }
+    try {
+      dispatch({ type: 'LOADED', items: await transactionsService.list(user.uid) });
+    } catch (e) {
+      dispatch({ type: 'ERROR', error: 'Falha ao carregar transações' });
+    }
   }, [user]);
-  
+
   const create = async (data: Omit<Transaction, 'id' | 'userId'>) => {
     if (!user) throw new Error('Usuário não autenticado');
     try {
@@ -86,7 +90,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  useEffect(() => { refresh() }, [user, refresh]);
+  useEffect(() => {
+    refresh();
+  }, [user, refresh]);
 
   const value: TransactionsContext = {
     ...state,
