@@ -1,3 +1,4 @@
+export * from './authSchema';
 export * from './categories';
 export * from './constants';
 export * from './schema';

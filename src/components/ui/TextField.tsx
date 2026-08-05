@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Ref } from 'react';
 import {
   StyleSheet,
   TextInput,
   View,
   type KeyboardTypeOptions,
   type StyleProp,
+  type TextInputProps,
   type ViewStyle,
 } from 'react-native';
 
@@ -21,8 +22,15 @@ export interface TextFieldProps {
   error?: string;
   secureTextEntry?: boolean;
   keyboardType?: KeyboardTypeOptions;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoComplete?: TextInputProps['autoComplete'];
+  autoCorrect?: boolean;
+  textContentType?: TextInputProps['textContentType'];
+  returnKeyType?: TextInputProps['returnKeyType'];
+  onSubmitEditing?: TextInputProps['onSubmitEditing'];
   disabled?: boolean;
   accessibilityLabel?: string;
+  ref?: Ref<TextInput>;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -36,8 +44,15 @@ export function TextField({
   error,
   secureTextEntry,
   keyboardType,
+  autoCapitalize,
+  autoComplete,
+  autoCorrect,
+  textContentType,
+  returnKeyType,
+  onSubmitEditing,
   disabled = false,
   accessibilityLabel,
+  ref,
   style,
   testID,
 }: TextFieldProps) {
@@ -49,6 +64,7 @@ export function TextField({
     <View style={style}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
+        ref={ref}
         value={value}
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
@@ -60,6 +76,12 @@ export function TextField({
         placeholderTextColor={theme.colors.placeholder}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        autoComplete={autoComplete}
+        autoCorrect={autoCorrect}
+        textContentType={textContentType}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
         editable={!disabled}
         accessibilityLabel={accessibilityLabel ?? label}
         accessibilityState={{ disabled }}
