@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View, type TextInput } from 'react-native';
@@ -15,6 +16,7 @@ import { useTheme, type Theme } from '@/src/theme';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
+  const router = useRouter();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const emailRef = useRef<TextInput>(null);
@@ -36,6 +38,7 @@ export default function RegisterScreen() {
     setFormError(null);
     try {
       await signUp(email, password, name);
+      router.replace('/');
     } catch (error) {
       setFormError(mapAuthError(error));
     }

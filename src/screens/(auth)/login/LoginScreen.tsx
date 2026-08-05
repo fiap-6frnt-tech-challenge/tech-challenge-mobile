@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View, type TextInput } from 'react-native';
@@ -15,6 +16,7 @@ import { useTheme, type Theme } from '@/src/theme';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const router = useRouter();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const passwordRef = useRef<TextInput>(null);
@@ -34,6 +36,7 @@ export default function LoginScreen() {
     setFormError(null);
     try {
       await signIn(email, password);
+      router.replace('/');
     } catch (error) {
       setFormError(mapAuthError(error));
     }

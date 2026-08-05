@@ -1,7 +1,6 @@
 import { Link, type LinkProps } from 'expo-router';
 import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/src/components/ui/Text';
 import { useTheme, type Theme } from '@/src/theme';
 
@@ -19,13 +18,14 @@ export function AuthFooterLink({ prompt, label, href, testID }: AuthFooterLinkPr
   return (
     <View style={styles.container}>
       <Text color="textSecondary">{prompt}</Text>
-      <Link
-        href={href}
-        style={styles.link}
-        accessibilityRole="link"
-        accessibilityLabel={label}
-        testID={testID}>
-        {label}
+      <Link href={href} asChild>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={label}
+          style={styles.linkPressable}
+          testID={testID}>
+          <Text style={styles.link}>{label}</Text>
+        </Pressable>
       </Link>
     </View>
   );
@@ -40,9 +40,11 @@ function createStyles(theme: Theme) {
       alignItems: 'center',
       gap: theme.spacing.xs,
     },
-    link: {
+    linkPressable: {
       paddingVertical: theme.spacing.sm,
       paddingHorizontal: theme.spacing.xs,
+    },
+    link: {
       color: theme.colors.primary,
       fontSize: theme.typography.body.fontSize,
       fontWeight: '600',
