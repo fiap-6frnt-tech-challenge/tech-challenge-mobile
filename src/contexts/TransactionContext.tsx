@@ -52,7 +52,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'LOADING' });
     try {
       dispatch({ type: 'LOADED', items: await transactionsService.list(user.uid) });
-    } catch (e) {
+    } catch {
       dispatch({ type: 'ERROR', error: 'Falha ao carregar transações' });
     }
   }, [user]);
