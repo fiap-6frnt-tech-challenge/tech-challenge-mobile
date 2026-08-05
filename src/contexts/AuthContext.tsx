@@ -29,9 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthState = {
     user,
     loading,
-    signIn: async () => {},
-    signUp: async () => {},
-    signOut: async () => {},
+    signIn: async (email, password) => {
+      await authService.signIn(email, password);
+    },
+    signUp: async (email, password, name) => {
+      await authService.signUp(email, password, name);
+    },
+    signOut: () => authService.signOut(),
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

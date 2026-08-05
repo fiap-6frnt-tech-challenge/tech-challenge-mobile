@@ -104,4 +104,59 @@ describe('AuthProvider', () => {
 
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
+
+  it('delegates sign in and reflects the subsequent authenticated emission', async () => {
+    authServiceMocks.signIn.mockResolvedValue(signedInUser);
+    renderProvider();
+    emitAuthState(null);
+
+    await act(async () => {
+      await currentAuth().signIn('erick@example.com', 'secret123');
+    });
+
+    expect(authServiceMocks.signIn).toHaveBeenCalledWith('erick@example.com', 'secret123');
+    expect(currentAuth().user).toBeNull();
+
+    emitAuthState(signedInUser);
+
+    expect(currentAuth().user).toBe(signedInUser);
+  });
+
+  it('delegates sign up with the profile name', async () => {
+    authServiceMocks.signUp.mockResolvedValue(signedInUser);
+    renderProvider();
+
+    await act(async () => {
+      await currentAuth().signUp('erick@example.com', 'secret123', 'Erick');
+    });
+
+    expect(authServiceMocks.signUp).toHaveBeenCalledWith('erick@example.com', 'secret123', 'Erick');
+  });
+
+  it('delegates sign out and clears the user after the signed-out emission', async () => {
+    authServiceMocks.signOut.mockResolvedValue(undefined);
+    renderProvider();
+    emitAuthState(signedInUser);
+
+    await act(async () => {
+      await currentAuth().signOut();
+    });
+
+    expect(authServiceMocks.signOut).toHaveBeenCalledOnce();
+    expect(currentAuth().user).toBe(signedInUser);
+
+    emitAuthState(null);
+
+    expect(currentAuth().user).toBeNull();
+  });
+
+  it('propagates authentication action errors unchanged', async () => {
+    const error = Object.assign(new Error('wrong password'), {
+      code: 'auth/wrong-password',
+    });
+    authServiceMocks.signIn.mockRejectedValue(error);
+    renderProvider();
+
+    await expect(currentAuth().signIn('erick@example.com', 'wrong')).rejects.toBe(error);
+  });
 });
