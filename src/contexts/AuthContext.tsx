@@ -1,5 +1,7 @@
-import { createContext, useContext, ReactNode } from 'react';
 import type { User } from 'firebase/auth';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+
+import { authService } from '../services/auth.service';
 
 interface AuthState {
   user: User | null;
@@ -12,13 +14,28 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // S1-02 preenche com onAuthStateChanged + auth.service
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(
+    () =>
+      authService.subscribe((nextUser) => {
+        setUser(nextUser);
+        setLoading(false);
+      }),
+    []
+  );
+
   const value: AuthState = {
-    user: null,
-    loading: false,
-    signIn: async () => {},
-    signUp: async () => {},
-    signOut: async () => {},
+    user,
+    loading,
+    signIn: async (email, password) => {
+      await authService.signIn(email, password);
+    },
+    signUp: async (email, password, name) => {
+      await authService.signUp(email, password, name);
+    },
+    signOut: () => authService.signOut(),
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
