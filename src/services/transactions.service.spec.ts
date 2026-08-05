@@ -17,6 +17,10 @@ vi.mock('firebase/firestore', () => {
   };
 });
 
+vi.mock('./firebase', () => ({
+  db: { name: 'firestore-instance' },
+}));
+
 describe('transactionsService', () => {
   it('list returns mapped transactions', async () => {
     const res = await transactionsService.list('uid1');
