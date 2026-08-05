@@ -14,7 +14,7 @@
 - [x] `navigation-skeleton` integrado
 - [x] Domínio portado para `src/domain`
 - [x] Firebase inicializado
-- [ ] Provider Email/Password habilitado no Firebase Console
+- [x] Provider Email/Password habilitado no Firebase Console
 
 ---
 
@@ -22,8 +22,8 @@
 
 | # | Status | Task | Owner | Duração | Paralela? | Arquivo |
 | --- | --- | --- | --- | --- | --- | --- |
-| 01 | ⏳ | `auth.service` + persistência | Dev 1 | 1 dia | ✅ | [01-auth-service.md](./01-auth-service.md) |
-| 02 | ⏳ | `AuthContext` completo (`user`, `loading`, ações) | Dev 1 | 1 dia | ⬅ 01 | [02-auth-context.md](./02-auth-context.md) |
+| 01 | ✅ | `auth.service` + persistência | Dev 1 | 1 dia | ✅ | [01-auth-service.md](./01-auth-service.md) |
+| 02 | 🟢 | `AuthContext` completo (`user`, `loading`, ações) | Dev 1 | 1 dia | ⬅ 01 | [02-auth-context.md](./02-auth-context.md) |
 | 03 | ⏳ | Modelo Firestore + `firestore.rules` | Dev 1 | 1.5 dia | ✅ | [03-firestore-model-rules.md](./03-firestore-model-rules.md) |
 | 04 | ⏳ | `transactions.service` CRUD sem anexos | Dev 1 | 1.5 dia | ⬅ 03 | [04-transactions-service.md](./04-transactions-service.md) |
 | 05 | ⏳ | DS: form components + stories | Dev 2 | 2.5 dias | ✅ | [05-ds-form-components.md](./05-ds-form-components.md) |

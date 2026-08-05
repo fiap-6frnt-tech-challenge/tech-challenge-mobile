@@ -42,10 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 ## Validação
 
-- [ ] `loading = true` no boot até `onAuthStateChanged` resolver
-- [ ] Após `signIn`, `user` reflete o usuário logado sem reload manual
-- [ ] `signOut` zera `user`
-- [ ] `subscribe` faz unsubscribe no unmount (retorno do `useEffect`)
+- [x] `loading = true` no boot até `onAuthStateChanged` resolver
+- [x] Após `signIn`, `user` reflete o usuário logado sem reload manual
+- [x] `signOut` zera `user`
+- [x] `subscribe` faz unsubscribe no unmount (retorno do `useEffect`)
 
 ## Gotchas
 
