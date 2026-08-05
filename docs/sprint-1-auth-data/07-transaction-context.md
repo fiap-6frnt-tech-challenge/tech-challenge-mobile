@@ -1,4 +1,4 @@
-# Task 07 — `TransactionContext` (useReducer + service)
+# Task 07 — `TransactionContext` (useReducer + service) ✅
 
 | | |
 | --- | --- |
@@ -57,10 +57,10 @@ export function TransactionProvider({ children }) {
 
 ## Validação
 
-- [ ] Ao logar, a lista carrega automaticamente
-- [ ] `create`/`update`/`remove` refletem na lista após `refresh`
-- [ ] `error` populado quando o service falha
-- [ ] Ao deslogar, o próximo login carrega os dados do novo usuário (sem vazar do anterior)
+- [X] Ao logar, a lista carrega automaticamente
+- [X] `create`/`update`/`remove` refletem na lista após `refresh`
+- [X] `error` populado quando o service falha
+- [X] Ao deslogar, o próximo login carrega os dados do novo usuário (sem vazar do anterior)
 
 ## Gotchas
 
