@@ -45,11 +45,11 @@ export function topCategory(txs: Transaction[]): { category: string; total: numb
 
 ## Validação
 
-- [ ] `balance` ignora `transfer`
-- [ ] `totals` bate com soma manual num fixture
-- [ ] `byMonth` retorna exatamente `months` buckets (preenche meses sem dados com 0)
-- [ ] `topCategory` retorna a categoria de maior gasto do mês corrente
-- [ ] ≥10 casos de teste (incluindo lista vazia → zeros/`null`)
+- [x] `balance` ignora `transfer`
+- [x] `totals` bate com soma manual num fixture
+- [x] `byMonth` retorna exatamente `months` buckets (preenche meses sem dados com 0)
+- [x] `topCategory` retorna a categoria de maior gasto do mês corrente
+- [x] ≥10 casos de teste (incluindo lista vazia → zeros/`null`)
 
 ## Gotchas
 
