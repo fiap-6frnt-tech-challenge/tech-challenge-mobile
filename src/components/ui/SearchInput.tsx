@@ -14,13 +14,10 @@ import { useTheme, type Theme } from '@/src/theme';
 import { Text } from './Text';
 
 export interface SearchInputProps {
-  /** Initial query. The typed text is owned internally so typing stays instant. */
   defaultValue?: string;
   placeholder?: string;
-  /** Called with the query after `debounceMs` of inactivity, and immediately on clear. */
   onSearch: (query: string) => void;
   debounceMs?: number;
-  /** When provided, the result count is announced by the screen reader after each search. */
   resultCount?: number;
   disabled?: boolean;
   autoFocus?: boolean;
