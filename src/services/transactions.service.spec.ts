@@ -50,6 +50,25 @@ describe('transactionsService', () => {
     expect(result).toEqual([{ id: 't1', userId: 'uid1', date: '2026-08-03', amount: 20 }]);
   });
 
+  it('does not expose descriptionNormalized when listing transactions', async () => {
+    firestore.getDocs.mockResolvedValueOnce({
+      docs: [
+        {
+          id: 't1',
+          data: () => ({
+            date: '2026-08-03',
+            description: 'Caf\u00e9',
+            descriptionNormalized: 'cafe',
+          }),
+        },
+      ],
+    });
+
+    await expect(transactionsService.list('uid1')).resolves.toEqual([
+      { id: 't1', userId: 'uid1', date: '2026-08-03', description: 'Caf\u00e9' },
+    ]);
+  });
+
   it('creates a transaction and returns its id', async () => {
     await expect(
       transactionsService.create('uid1', { date: '2026-01-01', amount: 5 } as never)

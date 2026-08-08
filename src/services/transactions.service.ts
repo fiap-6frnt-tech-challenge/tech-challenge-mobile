@@ -24,8 +24,11 @@ import {
 
 const col = (uid: string) => collection(db, 'users', uid, 'transactions');
 
-const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction =>
-  ({ id: snapshot.id, userId: uid, ...snapshot.data() }) as Transaction;
+const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction => {
+  const { descriptionNormalized: _descriptionNormalized, ...data } = snapshot.data();
+
+  return { id: snapshot.id, userId: uid, ...data } as Transaction;
+};
 
 function withNormalizedDescription<T extends Partial<Pick<Transaction, 'description'>>>(data: T) {
   if (data.description === undefined) return data;
