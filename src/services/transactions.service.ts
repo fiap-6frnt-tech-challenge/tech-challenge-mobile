@@ -70,13 +70,22 @@ export const transactionsService = {
     }
 
     const clauses: QueryConstraint[] = [];
+    const normalizedSearch = normalizeSearchText(filter.search ?? '');
+
+    if (normalizedSearch) {
+      clauses.push(where('descriptionNormalized', '>=', normalizedSearch));
+      clauses.push(where('descriptionNormalized', '<=', `${normalizedSearch}\uf8ff`));
+    }
 
     if (filter.type) clauses.push(where('type', '==', filter.type));
     if (filter.categories?.length) clauses.push(where('category', 'in', filter.categories));
     if (filter.dateFrom) clauses.push(where('date', '>=', filter.dateFrom));
     if (filter.dateTo) clauses.push(where('date', '<=', filter.dateTo));
 
-    const baseQuery = query(col(uid), ...clauses, orderBy('date', 'desc'), limit(pageSize + 1));
+    const orderConstraints = normalizedSearch
+      ? [orderBy('descriptionNormalized', 'asc'), orderBy('date', 'desc')]
+      : [orderBy('date', 'desc')];
+    const baseQuery = query(col(uid), ...clauses, ...orderConstraints, limit(pageSize + 1));
     const snapshot = await getDocs(cursor ? query(baseQuery, startAfter(cursor)) : baseQuery);
     const hasMore = snapshot.docs.length > pageSize;
     const pageDocuments = hasMore ? snapshot.docs.slice(0, pageSize) : snapshot.docs;
