@@ -24,7 +24,7 @@ function AuthGate() {
     else if (user && inAuthGroup) router.replace('/(app)/(tabs)');
 
     SplashScreen.hideAsync();
-  }, [user, loading, segments]);
+  }, [user, loading, segments, router]);
 
   if (loading) return null;
 
