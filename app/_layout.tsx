@@ -10,37 +10,41 @@ import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 
+function AuthGate() {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!user && !inAuthGroup) router.replace('/(auth)/login');
+    else if (user && inAuthGroup) router.replace('/(app)/(tabs)');
+
+    SplashScreen.hideAsync();
+  }, [user, loading, segments]);
+
+  if (loading) return null;
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(app)" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="storybook" />
+    </Stack>
+  );
+}
+
 export default function Layout() {
-  function AuthGate({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
-    const segments = useSegments();
-    const router = useRouter();
-
-    useEffect(() => {
-      if (loading) return;
-      const inAuthGroup = segments[0] === '(auth)';
-      if (!user && !inAuthGroup) router.replace('/(auth)/login');
-      else if (user && inAuthGroup) router.replace('/(app)/(tabs)');
-      SplashScreen.hideAsync();
-    }, [user, loading, segments]);
-
-    if (loading) return null;
-    return children;
-  }
-
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <AuthGate>
-            <TransactionProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(app)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="storybook" />
-              </Stack>
-            </TransactionProvider>
-          </AuthGate>
+          <TransactionProvider>
+            <AuthGate />
+          </TransactionProvider>
         </AuthProvider>
         <StatusBar style="auto" />
       </ThemeProvider>
