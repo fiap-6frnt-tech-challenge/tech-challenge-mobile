@@ -140,9 +140,7 @@ describe('transactionsService', () => {
 
     expect(firestore.getDocs).toHaveBeenCalledWith(
       expect.objectContaining({
-        clauses: expect.arrayContaining([
-          expect.objectContaining({ kind: 'startAfter', cursor }),
-        ]),
+        clauses: expect.arrayContaining([expect.objectContaining({ kind: 'startAfter', cursor })]),
       })
     );
   });
