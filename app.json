@@ -27,7 +27,8 @@
         }
       ],
       "expo-document-picker",
-      "./withAndroidAccentColor.js"
+      "./withAndroidAccentColor.js",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
