@@ -15,12 +15,26 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { CategoryId, Transaction, TransactionType } from '../domain';
+import {
+  normalizeSearchText,
+  type CategoryId,
+  type Transaction,
+  type TransactionType,
+} from '../domain';
 
 const col = (uid: string) => collection(db, 'users', uid, 'transactions');
 
 const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction =>
   ({ id: snapshot.id, userId: uid, ...snapshot.data() }) as Transaction;
+
+function withNormalizedDescription<T extends Partial<Pick<Transaction, 'description'>>>(data: T) {
+  if (data.description === undefined) return data;
+
+  return {
+    ...data,
+    descriptionNormalized: normalizeSearchText(data.description),
+  };
+}
 
 export interface TxFilter {
   type?: TransactionType;
@@ -71,10 +85,13 @@ export const transactionsService = {
     };
   },
   async create(uid: string, data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) {
-    const ref = await addDoc(col(uid), { ...data, createdAt: serverTimestamp() });
+    const ref = await addDoc(col(uid), {
+      ...withNormalizedDescription(data),
+      createdAt: serverTimestamp(),
+    });
     return ref.id;
   },
   update: (uid: string, id: string, patch: Partial<Transaction>) =>
-    updateDoc(doc(db, 'users', uid, 'transactions', id), patch),
+    updateDoc(doc(db, 'users', uid, 'transactions', id), withNormalizedDescription(patch)),
   remove: (uid: string, id: string) => deleteDoc(doc(db, 'users', uid, 'transactions', id)),
 };

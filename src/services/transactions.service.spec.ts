@@ -56,6 +56,39 @@ describe('transactionsService', () => {
     ).resolves.toBe('new-id');
   });
 
+  it('stores a normalized description when creating a transaction', async () => {
+    await transactionsService.create('uid1', {
+      type: 'withdrawal',
+      category: 'food',
+      amount: 35,
+      date: '2026-08-08',
+      description: '  Caf\u00e9 da MANH\u00c3  ',
+    });
+
+    expect(firestore.addDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        description: '  Caf\u00e9 da MANH\u00c3  ',
+        descriptionNormalized: 'cafe da manha',
+      })
+    );
+  });
+
+  it('refreshes the normalized description when description changes', async () => {
+    await transactionsService.update('uid1', 'tx1', { description: '\u00c1gua e LUZ' });
+
+    expect(firestore.updateDoc).toHaveBeenCalledWith(expect.anything(), {
+      description: '\u00c1gua e LUZ',
+      descriptionNormalized: 'agua e luz',
+    });
+  });
+
+  it('does not add descriptionNormalized to unrelated updates', async () => {
+    await transactionsService.update('uid1', 'tx1', { amount: 40 });
+
+    expect(firestore.updateDoc).toHaveBeenCalledWith(expect.anything(), { amount: 40 });
+  });
+
   it('returns mapped items, the final document cursor, and hasMore for a full page', async () => {
     firestore.getDocs.mockResolvedValueOnce({ docs });
 
