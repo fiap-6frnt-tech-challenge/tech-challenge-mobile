@@ -8,16 +8,67 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  limit,
+  startAfter,
+  where,
+  type QueryConstraint,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Transaction } from '../domain';
+import type { CategoryId, Transaction, TransactionType } from '../domain';
 
 const col = (uid: string) => collection(db, 'users', uid, 'transactions');
+
+const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction =>
+  ({ id: snapshot.id, userId: uid, ...snapshot.data() }) as Transaction;
+
+export interface TxFilter {
+  type?: TransactionType;
+  categories?: CategoryId[];
+  dateFrom?: string;
+  dateTo?: string;
+  // S3-02 defines normalized prefix search and the transaction write-path migration.
+  search?: string;
+}
+
+export interface TransactionPage {
+  items: Transaction[];
+  cursor: QueryDocumentSnapshot | null;
+  hasMore: boolean;
+}
 
 export const transactionsService = {
   async list(uid: string): Promise<Transaction[]> {
     const snap = await getDocs(query(col(uid), orderBy('date', 'desc')));
-    return snap.docs.map((d) => ({ id: d.id, userId: uid, ...d.data() }) as Transaction);
+    return snap.docs.map((document) => mapTransaction(uid, document));
+  },
+  async listPaged(
+    uid: string,
+    filter: TxFilter,
+    pageSize = 20,
+    cursor: QueryDocumentSnapshot | null = null
+  ): Promise<TransactionPage> {
+    if (filter.categories && filter.categories.length > 10) {
+      throw new Error('A maximum of 10 categories can be filtered at once');
+    }
+
+    const clauses: QueryConstraint[] = [];
+
+    if (filter.type) clauses.push(where('type', '==', filter.type));
+    if (filter.categories?.length) clauses.push(where('category', 'in', filter.categories));
+    if (filter.dateFrom) clauses.push(where('date', '>=', filter.dateFrom));
+    if (filter.dateTo) clauses.push(where('date', '<=', filter.dateTo));
+
+    const baseQuery = query(col(uid), ...clauses, orderBy('date', 'desc'), limit(pageSize + 1));
+    const snapshot = await getDocs(cursor ? query(baseQuery, startAfter(cursor)) : baseQuery);
+    const hasMore = snapshot.docs.length > pageSize;
+    const pageDocuments = hasMore ? snapshot.docs.slice(0, pageSize) : snapshot.docs;
+
+    return {
+      items: pageDocuments.map((document) => mapTransaction(uid, document)),
+      cursor: pageDocuments.at(-1) ?? null,
+      hasMore,
+    };
   },
   async create(uid: string, data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) {
     const ref = await addDoc(col(uid), { ...data, createdAt: serverTimestamp() });

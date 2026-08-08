@@ -52,18 +52,26 @@ export async function listPaged(
 }
 ```
 
-**Busca por descrição:** Firestore não faz full-text. Opções: (a) busca por **prefixo** com `where('description','>=',q)` + `where('description','<=',q+'')`; (b) filtrar client-side dentro da página. Adotamos **(a)** para prefixo + refino client-side. Documentar a limitação no README.
+**Busca por descrição:** Firestore não faz full-text. A estratégia de prefixo com `descriptionNormalized` e eventual refino client-side é definida na Task 02; esta task expõe o campo `search` no contrato, mas não executa uma query textual antes da normalização existir no write path.
 
 ## Validação
 
-- [ ] `listPaged` retorna `pageSize` itens + `cursor` + `hasMore`
-- [ ] Passar o `cursor` traz a próxima página sem repetir
-- [ ] Filtros por tipo/categoria/data aplicam no servidor
-- [ ] Última página → `hasMore = false`
+- [x] `listPaged` retorna `pageSize` itens + `cursor` + `hasMore`
+- [x] Passar o `cursor` traz a próxima página sem repetir
+- [x] Filtros por tipo/categoria/data aplicam no servidor
+- [x] Última página → `hasMore = false`
+
+## Índices e validação manual
+
+As combinações de filtros podem requerer índices compostos. As definições
+versionadas ficam em `firestore.indexes.json`; criar/deployar o índice indicado
+pelo erro do Firestore Console antes do smoke em device. A busca por descrição
+será adicionada na S3-02 com `descriptionNormalized`; esta task não oferece
+full-text search.
 
 ## Gotchas
 
 1. **Índices compostos:** `where + orderBy` em campos diferentes exige índice. O erro do Firestore traz o link p/ criar — adicionar em `firestore.indexes.json` e documentar.
 2. **`where('category','in',[...])`** limita a 10 valores e não combina com `!=` — ok p/ multi-select de categorias.
-3. **Cursor é `DocumentSnapshot`**, não um valor — o hook (Task 07) precisa guardá-lo entre chamadas.
-4. Busca full-text real exigiria Algolia/typesense — fora de escopo; prefixo cobre a demo.
+3. **Cursor é `DocumentSnapshot`**, não um valor — o hook (Task 07) precisa guardá-lo entre chamadas. `listPaged` busca um registro extra para determinar `hasMore`, mas retorna somente `pageSize` itens e o cursor do último item retornado.
+4. Busca full-text real exigiria Algolia/typesense — fora de escopo; a busca por prefixo será definida na Task 02.
