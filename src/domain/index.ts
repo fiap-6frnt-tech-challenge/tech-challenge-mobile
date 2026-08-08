@@ -1,6 +1,7 @@
 export * from './authSchema';
 export * from './categories';
 export * from './constants';
+export * from './normalizeSearchText';
 export * from './schema';
 export * from './suggestCategory';
 export * from './transaction';
