@@ -19,6 +19,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Bytebank usa suas fotos para anexar comprovantes às transações.",
+          "cameraPermission": "O Bytebank usa a câmera para fotografar comprovantes de transações."
+        }
+      ],
+      "expo-document-picker",
       "./withAndroidAccentColor.js"
     ],
     "experiments": {
