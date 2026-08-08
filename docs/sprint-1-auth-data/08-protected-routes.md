@@ -1,4 +1,4 @@
-# Task 08 — Wiring de rotas protegidas
+# Task 08 — Wiring de rotas protegidas ✅
 
 | | |
 | --- | --- |
@@ -39,10 +39,10 @@ function AuthGate({ children }) {
 
 ## Validação
 
-- [ ] App fechado e reaberto com sessão → abre direto no `(app)` (sem piscar login)
-- [ ] Sem sessão, tentar acessar `(app)` → redireciona p/ login
-- [ ] Após logout, volta p/ login imediatamente
-- [ ] Durante `loading`, mostra splash (não a tela de login)
+- [X] App fechado e reaberto com sessão → abre direto no `(app)` (sem piscar login)
+- [X] Sem sessão, tentar acessar `(app)` → redireciona p/ login
+- [X] Após logout, volta p/ login imediatamente
+- [X] Durante `loading`, mostra splash (não a tela de login)
 
 ## Gotchas
 
