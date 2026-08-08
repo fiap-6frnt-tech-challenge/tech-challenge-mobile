@@ -15,6 +15,8 @@
 
 Telas públicas do grupo `(auth)`. Usam `useAuth()` + React Hook Form + Zod. Mapeiam erros do Firebase para mensagens pt-BR.
 
+**Escopo estendido:** a tela de Perfil entrou nesta task. O logout é cobrado como critério de aceite da sprint e do projeto (`README.md` da sprint, `PLAN.md` item 12), mas nenhuma task do plano entregava a UI que hospeda esse botão — `(app)/profile` era só rota placeholder.
+
 ## Implementação
 
 Instalar: `npx expo install react-hook-form @hookform/resolvers`.
@@ -50,13 +52,18 @@ export const registerSchema = loginSchema.extend({
 
 `mapFirebaseError`: `auth/email-already-in-use` → "E-mail já cadastrado"; `auth/invalid-credential` → "E-mail ou senha incorretos"; etc.
 
+`src/screens/(app)/profile/ProfileScreen.tsx`: mostra nome/e-mail de `useAuth().user` e um botão "Sair da conta" que chama `signOut()`. Enquanto o guard da Task 08 não existir, o redirect é feito na própria tela (`router.replace('/login')`), mesmo padrão usado no sucesso de login/registro.
+
 ## Validação
 
-- [ ] Registrar cria conta e entra no app
-- [ ] Login com credencial errada mostra erro pt-BR (não o código bruto)
-- [ ] Validação client-side bloqueia submit inválido
-- [ ] Link Login ↔ Register funciona
-- [ ] Telas navegáveis por leitor de tela
+- [x] Registrar cria conta e entra no app — conta criada no Auth + doc `users/{uid}` gravado, com `router.replace('/')` após o sucesso
+- [x] Login com credencial errada mostra erro pt-BR (não o código bruto)
+- [x] Validação client-side bloqueia submit inválido
+- [x] Link Login ↔ Register funciona
+- [x] Telas navegáveis por leitor de tela
+- [x] Perfil mostra nome e e-mail da sessão
+- [x] "Sair da conta" encerra a sessão e volta para o login
+- [x] Sessão encerrada continua encerrada ao reabrir o app
 
 ## Gotchas
 

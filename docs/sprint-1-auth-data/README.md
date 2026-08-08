@@ -27,7 +27,7 @@
 | 03 | ⏳ | Modelo Firestore + `firestore.rules` | Dev 1 | 1.5 dia | ✅ | [03-firestore-model-rules.md](./03-firestore-model-rules.md) |
 | 04 | ⏳ | `transactions.service` CRUD sem anexos | Dev 1 | 1.5 dia | ⬅ 03 | [04-transactions-service.md](./04-transactions-service.md) |
 | 05 | ⏳ | DS: form components + stories | Dev 2 | 2.5 dias | ✅ | [05-ds-form-components.md](./05-ds-form-components.md) |
-| 06 | ⏳ | Telas Login + Register | Dev 2 | 1.5 dia | ⬅ 02, 05 | [06-auth-screens.md](./06-auth-screens.md) |
+| 06 | 🟢 | Telas Login + Register + Perfil com logout | Dev 2 | 1.5 dia | ⬅ 02, 05 | [06-auth-screens.md](./06-auth-screens.md) |
 | 07 | ⏳ | Guard de rotas sobre `(auth)`/`(app)` | Dev 3 | 1 dia | ⬅ 02 | [08-protected-routes.md](./08-protected-routes.md) |
 | 08 | ⏳ | `TransactionContext` com reducer + service | Dev 3 | 1.5 dia | ⬅ 04 | [07-transaction-context.md](./07-transaction-context.md) |
 | 09 | ⏳ | Form Add/Edit sem anexos com Zod + sugestão de categoria | Dev 2 + Dev 3 | 2 dias | ⬅ 05, 08 | [09-minimal-add-edit-form.md](./09-minimal-add-edit-form.md) |
