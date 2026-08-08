@@ -10,6 +10,7 @@ import {
   TRANSACTION_TYPE,
   type Transaction,
 } from './index';
+import { balance, balanceOverTime, byCategory } from './aggregations';
 
 const transactions: Transaction[] = [
   {
@@ -145,5 +146,13 @@ describe('groupByCategory', () => {
       { category: 'food', total: 200 },
       { category: 'transport', total: 50 },
     ]);
+  });
+});
+
+describe('legacy aggregation aliases', () => {
+  it('delegates legacy exports to the canonical aggregation functions', () => {
+    expect(calculateBalance).toBe(balance);
+    expect(cumulativeBalance).toBe(balanceOverTime);
+    expect(groupByCategory).toBe(byCategory);
   });
 });
