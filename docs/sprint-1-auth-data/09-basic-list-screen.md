@@ -29,11 +29,11 @@ Primeira tela que exibe dados reais do Firestore. Sem filtros nem scroll infinit
 
 ## Validação
 
-- [ ] Lista mostra transações do usuário logado
-- [ ] Pull-to-refresh recarrega
-- [ ] Estado vazio e de erro aparecem corretamente
-- [ ] Valor formatado em BRL; sinal/cor coerente com o tipo
-- [ ] Cada item é anunciável por leitor de tela
+- [X] Lista mostra transações do usuário logado
+- [X] Pull-to-refresh recarrega
+- [X] Estado vazio e de erro aparecem corretamente
+- [X] Valor formatado em BRL; sinal/cor coerente com o tipo
+- [X] Cada item é anunciável por leitor de tela
 
 ## Gotchas
 
