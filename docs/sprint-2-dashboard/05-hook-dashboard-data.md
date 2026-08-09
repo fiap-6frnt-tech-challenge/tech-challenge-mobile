@@ -1,4 +1,4 @@
-# Task 05 — Hook `useDashboardData`
+# Task 05 — Hook `useDashboardData` ✅
 
 | | |
 | --- | --- |
@@ -37,10 +37,10 @@ export function useDashboardData() {
 
 ## Validação
 
-- [ ] Retorna todas as séries prontas p/ os gráficos
-- [ ] `isEmpty` true quando não há transações
-- [ ] `useMemo` evita recalcular a cada render (só quando `items` muda)
-- [ ] `refresh` re-busca do Firestore e recomputa
+- [X] Retorna todas as séries prontas p/ os gráficos
+- [X] `isEmpty` true quando não há transações
+- [X] `useMemo` evita recalcular a cada render (só quando `items` muda)
+- [X] `refresh` re-busca do Firestore e recomputa
 
 ## Gotchas
 
