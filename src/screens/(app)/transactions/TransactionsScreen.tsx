@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
@@ -38,11 +38,12 @@ const SkeletonItem = () => {
 };
 
 export default function TransactionsScreen() {
-  const { items, loading, error, refresh, remove } = useTransactions();
+  const { items, loading, error, refresh } = useTransactions();
   const router = useRouter();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const groupRef = useRef<AnimatedSectionGroupHandle>(null);
+  const [fabPressed, setFabPressed] = useState(false);
 
   const handleRefresh = async () => {
     await refresh();
@@ -113,6 +114,16 @@ export default function TransactionsScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
       {renderContent()}
+      <Pressable
+        onPress={() => router.push('/transactionAdd')}
+        onPressIn={() => setFabPressed(true)}
+        onPressOut={() => setFabPressed(false)}
+        accessibilityRole="button"
+        accessibilityLabel="Adicionar nova transação"
+        testID="transactions-fab"
+        style={[styles.fab, fabPressed && styles.fabPressed]}>
+        <Plus size={28} color={theme.colors.textInverse} />
+      </Pressable>
     </SafeAreaView>
   );
 }

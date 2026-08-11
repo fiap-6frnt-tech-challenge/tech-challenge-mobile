@@ -10,7 +10,7 @@ interface TransactionState {
 }
 
 interface TransactionsContext extends TransactionState {
-  create: (data: Omit<Transaction, 'id' | 'userId'>) => Promise<void>;
+  create: (data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) => Promise<void>;
   update: (id: string, patch: Partial<Transaction>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
@@ -57,7 +57,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const create = async (data: Omit<Transaction, 'id' | 'userId'>) => {
+  const create = async (data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) => {
     if (!user) throw new Error('Usuário não autenticado');
     try {
       await transactionsService.create(user.uid, data);
