@@ -45,6 +45,7 @@ export function SegmentedControl<T extends string>({
   const shouldReduceMotion = reduceMotion ?? systemReduceMotion;
 
   const [trackWidth, setTrackWidth] = useState(0);
+  const [pressedValue, setPressedValue] = useState<T | null>(null);
   const segmentWidth = options.length > 0 ? trackWidth / options.length : 0;
 
   const selectedIndex = Math.max(
@@ -103,10 +104,12 @@ export function SegmentedControl<T extends string>({
             <Pressable
               key={option.value}
               onPress={() => onChange(option.value)}
+              onPressIn={() => setPressedValue(option.value)}
+              onPressOut={() => setPressedValue(null)}
               accessibilityRole="tab"
               accessibilityLabel={option.accessibilityLabel ?? option.label}
               accessibilityState={{ selected: isSelected }}
-              style={({ pressed }) => [styles.segment, pressed && styles.segmentPressed]}
+              style={[styles.segment, pressedValue === option.value && styles.segmentPressed]}
               testID={testID ? `${testID}-${option.value}` : undefined}>
               <Text
                 variant="body"

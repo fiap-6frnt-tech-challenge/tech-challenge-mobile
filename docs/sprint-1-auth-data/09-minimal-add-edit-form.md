@@ -22,13 +22,13 @@ O dashboard da Sprint 2 precisa consumir dados reais. Por isso, o fluxo de adici
 
 ## Validação
 
-- [ ] Valor inválido é bloqueado
-- [ ] Categoria obrigatória é validada
-- [ ] Data futura é bloqueada
-- [ ] Descrição menor que 3 caracteres é bloqueada
-- [ ] Criar transação persiste no Firestore
-- [ ] Editar transação persiste no Firestore
-- [ ] Sugestão de categoria aparece para descrições conhecidas
+- [x] Valor inválido é bloqueado
+- [x] Categoria obrigatória é validada
+- [x] Data futura é bloqueada
+- [x] Descrição menor que 3 caracteres é bloqueada
+- [x] Criar transação persiste no Firestore
+- [x] Editar transação persiste no Firestore
+- [x] Sugestão de categoria aparece para descrições conhecidas
 
 ## Gotchas
 

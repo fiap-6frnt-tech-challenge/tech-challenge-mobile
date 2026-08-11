@@ -30,9 +30,10 @@
 | 06 | 🟢 | Telas Login + Register + Perfil com logout | Dev 2 | 1.5 dia | ⬅ 02, 05 | [06-auth-screens.md](./06-auth-screens.md) |
 | 07 | ⏳ | Guard de rotas sobre `(auth)`/`(app)` | Dev 3 | 1 dia | ⬅ 02 | [08-protected-routes.md](./08-protected-routes.md) |
 | 08 | ⏳ | `TransactionContext` com reducer + service | Dev 3 | 1.5 dia | ⬅ 04 | [07-transaction-context.md](./07-transaction-context.md) |
-| 09 | ⏳ | Form Add/Edit sem anexos com Zod + sugestão de categoria | Dev 2 + Dev 3 | 2 dias | ⬅ 05, 08 | [09-minimal-add-edit-form.md](./09-minimal-add-edit-form.md) |
+| 09 | 🟢 | Form Add/Edit sem anexos com Zod + sugestão de categoria | Dev 2 + Dev 3 | 2 dias | ⬅ 05, 08 | [09-minimal-add-edit-form.md](./09-minimal-add-edit-form.md) |
 | 10 | ⏳ | Lista básica do usuário autenticado | Dev 3 | 1 dia | ⬅ 08 | [09-basic-list-screen.md](./09-basic-list-screen.md) |
 | 11 | ⏳ | Testes + smoke login -> criar -> editar -> listar | Todos | 1 dia | ⬅ impl | [10-tests-smoke.md](./10-tests-smoke.md) |
+| 12 | 🟢 | Excluir transação na tela de detalhe (extra, fora do plano) | Extra | 0.5 dia | ⬅ 08, 09 | [11-delete-transaction.md](./11-delete-transaction.md) |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
 
