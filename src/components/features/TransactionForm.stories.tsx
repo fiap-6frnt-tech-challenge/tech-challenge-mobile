@@ -33,8 +33,6 @@ export const Edit: Story = {
   },
 };
 
-// The suggestion chip shows up because "uber" maps to transport and the user has not
-// touched the category yet.
 export const WithCategorySuggestion: Story = {
   args: {
     initialValues: {

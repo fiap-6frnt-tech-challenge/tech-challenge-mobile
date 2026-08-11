@@ -23,7 +23,6 @@ import { useTheme, type Theme } from '@/src/theme';
 
 const CATEGORY_OPTIONS = CATEGORIES.map(({ id, label }) => ({ value: id, label }));
 
-// The date is stored as a local YYYY-MM-DD string, the same shape DatePicker returns.
 function todayISO(): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -35,7 +34,6 @@ export interface TransactionFormProps {
   initialValues?: Partial<TransactionFormValues>;
   submitLabel?: string;
   onSubmit: (values: TransactionFormValues) => Promise<void>;
-  /** Extra actions rendered below the submit button, inside the same scroll view. */
   footer?: ReactNode;
   testID?: string;
 }
@@ -50,10 +48,8 @@ export function TransactionForm({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [formError, setFormError] = useState<string | null>(null);
-  // Editing starts locked so a saved category is never overwritten by a suggestion.
   const [categoryTouched, setCategoryTouched] = useState(Boolean(initialValues?.category));
 
-  // `category` starts empty, so the field types come from the schema, not from the defaults.
   const {
     control,
     handleSubmit,
