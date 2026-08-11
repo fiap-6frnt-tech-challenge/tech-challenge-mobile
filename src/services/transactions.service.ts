@@ -15,12 +15,29 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { CategoryId, Transaction, TransactionType } from '../domain';
+import {
+  normalizeSearchText,
+  type CategoryId,
+  type Transaction,
+  type TransactionType,
+} from '../domain';
 
 const col = (uid: string) => collection(db, 'users', uid, 'transactions');
 
-const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction =>
-  ({ id: snapshot.id, userId: uid, ...snapshot.data() }) as Transaction;
+const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction => {
+  const { descriptionNormalized: _descriptionNormalized, ...data } = snapshot.data();
+
+  return { id: snapshot.id, userId: uid, ...data } as Transaction;
+};
+
+function withNormalizedDescription<T extends Partial<Pick<Transaction, 'description'>>>(data: T) {
+  if (data.description === undefined) return data;
+
+  return {
+    ...data,
+    descriptionNormalized: normalizeSearchText(data.description),
+  };
+}
 
 export interface TxFilter {
   type?: TransactionType;
@@ -53,13 +70,22 @@ export const transactionsService = {
     }
 
     const clauses: QueryConstraint[] = [];
+    const normalizedSearch = normalizeSearchText(filter.search ?? '');
+
+    if (normalizedSearch) {
+      clauses.push(where('descriptionNormalized', '>=', normalizedSearch));
+      clauses.push(where('descriptionNormalized', '<=', `${normalizedSearch}\uf8ff`));
+    }
 
     if (filter.type) clauses.push(where('type', '==', filter.type));
     if (filter.categories?.length) clauses.push(where('category', 'in', filter.categories));
     if (filter.dateFrom) clauses.push(where('date', '>=', filter.dateFrom));
     if (filter.dateTo) clauses.push(where('date', '<=', filter.dateTo));
 
-    const baseQuery = query(col(uid), ...clauses, orderBy('date', 'desc'), limit(pageSize + 1));
+    const orderConstraints = normalizedSearch
+      ? [orderBy('descriptionNormalized', 'asc'), orderBy('date', 'desc')]
+      : [orderBy('date', 'desc')];
+    const baseQuery = query(col(uid), ...clauses, ...orderConstraints, limit(pageSize + 1));
     const snapshot = await getDocs(cursor ? query(baseQuery, startAfter(cursor)) : baseQuery);
     const hasMore = snapshot.docs.length > pageSize;
     const pageDocuments = hasMore ? snapshot.docs.slice(0, pageSize) : snapshot.docs;
@@ -71,10 +97,13 @@ export const transactionsService = {
     };
   },
   async create(uid: string, data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) {
-    const ref = await addDoc(col(uid), { ...data, createdAt: serverTimestamp() });
+    const ref = await addDoc(col(uid), {
+      ...withNormalizedDescription(data),
+      createdAt: serverTimestamp(),
+    });
     return ref.id;
   },
   update: (uid: string, id: string, patch: Partial<Transaction>) =>
-    updateDoc(doc(db, 'users', uid, 'transactions', id), patch),
+    updateDoc(doc(db, 'users', uid, 'transactions', id), withNormalizedDescription(patch)),
   remove: (uid: string, id: string) => deleteDoc(doc(db, 'users', uid, 'transactions', id)),
 };

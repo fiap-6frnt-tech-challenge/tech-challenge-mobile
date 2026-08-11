@@ -23,16 +23,18 @@
 A spec permite **scroll infinito ou paginação**. O time mantém **scroll infinito**:
 
 - `FlatList` com `onEndReached`
-- Firestore cursor com `orderBy('date', 'desc')`, `limit(PAGE_SIZE)` e `startAfter(lastDoc)`
+- Sem busca textual: cursor Firestore com `orderBy('date', 'desc')`, `limit(PAGE_SIZE)` e `startAfter(lastDoc)`
 - Mudança de filtro reseta cursor e volta ao topo
 - Dedupe por `id`
 
-Para busca textual, Firestore tem limitações. A estratégia deve ser simples e documentada:
+Para busca textual, o contrato e:
 
-- filtros fortes por data, categoria e tipo via query Firestore
-- campo `descriptionNormalized` salvo na transação
-- busca por prefixo quando possível, ou busca local sobre o conjunto carregado se a combinação de filtros não permitir query eficiente
-- qualquer limitação deve aparecer no README final
+- campo `descriptionNormalized` salvo em create/update
+- busca por prefixo no Firestore, sem full-text ou substring
+- busca ordena por `descriptionNormalized` ASC e `date` DESC, consultando `pageSize + 1` documentos para calcular `hasMore`
+- normalização ignora caixa, acentos e espaços repetidos
+- mudança de busca reseta itens e cursor no hook
+- transações antigas precisam de backfill manual para participar da busca
 
 ---
 

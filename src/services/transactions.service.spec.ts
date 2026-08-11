@@ -50,10 +50,62 @@ describe('transactionsService', () => {
     expect(result).toEqual([{ id: 't1', userId: 'uid1', date: '2026-08-03', amount: 20 }]);
   });
 
+  it('does not expose descriptionNormalized when listing transactions', async () => {
+    firestore.getDocs.mockResolvedValueOnce({
+      docs: [
+        {
+          id: 't1',
+          data: () => ({
+            date: '2026-08-03',
+            description: 'Caf\u00e9',
+            descriptionNormalized: 'cafe',
+          }),
+        },
+      ],
+    });
+
+    await expect(transactionsService.list('uid1')).resolves.toEqual([
+      { id: 't1', userId: 'uid1', date: '2026-08-03', description: 'Caf\u00e9' },
+    ]);
+  });
+
   it('creates a transaction and returns its id', async () => {
     await expect(
       transactionsService.create('uid1', { date: '2026-01-01', amount: 5 } as never)
     ).resolves.toBe('new-id');
+  });
+
+  it('stores a normalized description when creating a transaction', async () => {
+    await transactionsService.create('uid1', {
+      type: 'withdrawal',
+      category: 'food',
+      amount: 35,
+      date: '2026-08-08',
+      description: '  Caf\u00e9 da MANH\u00c3  ',
+    });
+
+    expect(firestore.addDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        description: '  Caf\u00e9 da MANH\u00c3  ',
+        descriptionNormalized: 'cafe da manha',
+      })
+    );
+  });
+
+  it('refreshes the normalized description when description changes', async () => {
+    await transactionsService.update('uid1', 'tx1', { description: '\u00c1gua e LUZ' });
+
+    expect(firestore.updateDoc).toHaveBeenCalledWith(expect.anything(), {
+      description: '\u00c1gua e LUZ',
+      descriptionNormalized: 'agua e luz',
+    });
+  });
+
+  it('does not add descriptionNormalized to unrelated updates', async () => {
+    await transactionsService.update('uid1', 'tx1', { amount: 40 });
+
+    expect(firestore.updateDoc).toHaveBeenCalledWith(expect.anything(), { amount: 40 });
   });
 
   it('returns mapped items, the final document cursor, and hasMore for a full page', async () => {
@@ -78,6 +130,19 @@ describe('transactionsService', () => {
     await transactionsService.listPaged('uid1', {}, 2, cursor);
 
     expect(firestore.startAfter).toHaveBeenCalledWith(cursor);
+  });
+
+  it('keeps startAfter in the Firestore query when a search cursor is provided', async () => {
+    const cursor = docs[0] as unknown as QueryDocumentSnapshot;
+    firestore.getDocs.mockResolvedValueOnce({ docs: [docs[1]] });
+
+    await transactionsService.listPaged('uid1', { search: 'merc' }, 2, cursor);
+
+    expect(firestore.getDocs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clauses: expect.arrayContaining([expect.objectContaining({ kind: 'startAfter', cursor })]),
+      })
+    );
   });
 
   it('sets hasMore false when the final page has exactly pageSize items', async () => {
@@ -135,10 +200,54 @@ describe('transactionsService', () => {
     expect(firestore.limit).toHaveBeenCalledWith(8);
   });
 
-  it('keeps text search out of this service until S3-02 defines normalized prefix search', async () => {
-    await transactionsService.listPaged('uid1', { search: 'coffee' });
+  it('normalizes search and applies an inclusive Firestore prefix range', async () => {
+    await transactionsService.listPaged('uid1', { search: '  CAF\u00c9  ' });
 
-    expect(firestore.where).not.toHaveBeenCalled();
+    expect(firestore.where).toHaveBeenCalledWith('descriptionNormalized', '>=', 'cafe');
+    expect(firestore.where).toHaveBeenCalledWith('descriptionNormalized', '<=', `cafe\uf8ff`);
+  });
+
+  it('orders search pages by normalized description and then date', async () => {
+    await transactionsService.listPaged('uid1', { search: 'merc' }, 7);
+
+    expect(firestore.orderBy).toHaveBeenNthCalledWith(1, 'descriptionNormalized', 'asc');
+    expect(firestore.orderBy).toHaveBeenNthCalledWith(2, 'date', 'desc');
+    expect(firestore.limit).toHaveBeenCalledWith(8);
+  });
+
+  it('treats an empty normalized search as the unfiltered date-ordered query', async () => {
+    await transactionsService.listPaged('uid1', { search: '  \n ' });
+
+    expect(firestore.where).not.toHaveBeenCalledWith(
+      'descriptionNormalized',
+      expect.anything(),
+      expect.anything()
+    );
+    expect(firestore.orderBy).toHaveBeenCalledTimes(1);
+    expect(firestore.orderBy).toHaveBeenCalledWith('date', 'desc');
+  });
+
+  it('composes prefix search with structured filters in the query sent to getDocs', async () => {
+    await transactionsService.listPaged('uid1', {
+      search: 'merc',
+      type: 'withdrawal',
+      categories: ['food'],
+      dateFrom: '2026-08-01',
+      dateTo: '2026-08-31',
+    });
+
+    expect(firestore.getDocs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clauses: expect.arrayContaining([
+          expect.objectContaining({ field: 'descriptionNormalized', operator: '>=' }),
+          expect.objectContaining({ field: 'descriptionNormalized', operator: '<=' }),
+          expect.objectContaining({ field: 'type', operator: '==' }),
+          expect.objectContaining({ field: 'category', operator: 'in' }),
+          expect.objectContaining({ field: 'date', operator: '>=' }),
+          expect.objectContaining({ field: 'date', operator: '<=' }),
+        ]),
+      })
+    );
   });
 
   it('rejects more than ten selected categories without querying Firestore', async () => {
