@@ -23,10 +23,10 @@
 
 ## Validação
 
-- [ ] ≥20 casos de teste passam
-- [ ] Case-insensitive e ignora acentos
-- [ ] Sem match → `null`
-- [ ] Retorno é `CategoryId` válido (existe em `categories.ts`)
+- [x] ≥20 casos de teste passam
+- [x] Case-insensitive e ignora acentos
+- [x] Sem match → `null`
+- [x] Retorno é `CategoryId` válido (existe em `categories.ts`)
 
 ## Gotchas
 
