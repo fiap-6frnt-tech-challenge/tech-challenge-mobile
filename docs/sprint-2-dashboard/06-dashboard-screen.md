@@ -27,16 +27,6 @@ Monta a tela `(app)/index.tsx` juntando KPIs, gráficos e animações. Consome s
 - Cada seção envolvida em `<AnimatedSection index={i}>` (Task 04)
 - `ScrollView` com `RefreshControl` → `refresh()`
 
-## Entregue
-
-| Arquivo | Papel |
-| --- | --- |
-| `src/screens/(app)/dashboard/DashboardScreen.tsx` | A tela (a rota `app/(app)/(tabs)/index.tsx` já re-exportava a screen) |
-| `scripts/seed-transactions.mjs` | Popula `users/{uid}/transactions` com ~6 meses de dados de demonstração (`npm run seed`) |
-
-A tela consome só `useDashboardData()` + `useAuth()`. Seções (`AnimatedSection index`): 0 saudação + saldo,
-1 entradas/saídas do mês, 2 barras, 3 pizza + insight, 4 linha.
-
 ## Validação
 
 - [x] KPIs batem com a soma real das transações — saldo = `totals.balance`; entradas/saídas = último bucket de `byMonth` (mês corrente). Nenhum número é calculado na tela: só formatação e comparação mês a mês
