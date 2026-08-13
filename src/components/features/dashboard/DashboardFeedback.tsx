@@ -33,25 +33,27 @@ export function DashboardFeedback({ variant, onAction }: DashboardFeedbackProps)
   const Icon = variant === 'empty' ? ChartNoAxesCombined : TriangleAlert;
 
   return (
-    <View
-      testID={`dashboard-${variant}`}
-      accessible
-      accessibilityLabel={content.accessibilityLabel}
-      accessibilityRole={variant === 'error' ? 'alert' : 'text'}
-      accessibilityLiveRegion={variant === 'error' ? 'assertive' : 'polite'}
-      style={styles.root}>
-      <Icon
-        accessible={false}
-        size={40}
-        color={variant === 'error' ? theme.colors.danger : theme.colors.primary}
-        strokeWidth={1.75}
-      />
-      <Text variant="h2" style={styles.title}>
-        {content.title}
-      </Text>
-      <Text color="textSecondary" style={styles.message}>
-        {content.message}
-      </Text>
+    <View testID={`dashboard-${variant}`} style={styles.root}>
+      <View
+        testID={`dashboard-${variant}-announcement`}
+        accessible
+        accessibilityLabel={content.accessibilityLabel}
+        accessibilityRole={variant === 'error' ? 'alert' : 'text'}
+        accessibilityLiveRegion={variant === 'error' ? 'assertive' : 'polite'}
+        style={styles.announcement}>
+        <Icon
+          accessible={false}
+          size={40}
+          color={variant === 'error' ? theme.colors.danger : theme.colors.primary}
+          strokeWidth={1.75}
+        />
+        <Text variant="h2" style={styles.title}>
+          {content.title}
+        </Text>
+        <Text color="textSecondary" style={styles.message}>
+          {content.message}
+        </Text>
+      </View>
       <Button title={content.action} onPress={onAction} style={styles.action} />
     </View>
   );
@@ -64,6 +66,9 @@ function createStyles(theme: Theme) {
       justifyContent: 'center',
       paddingHorizontal: theme.spacing.xl,
       paddingVertical: theme.spacing['2xl'],
+    },
+    announcement: {
+      alignItems: 'center',
     },
     title: {
       marginTop: theme.spacing.md,

@@ -90,28 +90,52 @@ function render(element: ReactElement): ReactTestRenderer {
   return renderer;
 }
 
+afterEach(() => {
+  if (renderer) {
+    act(() => renderer?.unmount());
+    renderer = undefined;
+  }
+});
+
 describe('DashboardFeedback', () => {
   it('announces the empty dashboard and exposes its primary action', () => {
     const onAction = vi.fn();
     const tree = render(<DashboardFeedback variant="empty" onAction={onAction} />);
     const emptyRoot = tree.root.findByProps({ testID: 'dashboard-empty' });
+    const emptyAnnouncement = tree.root.findByProps({
+      testID: 'dashboard-empty-announcement',
+    });
     const emptyButton = tree.root.findByType(buttonType);
 
-    expect(emptyRoot.props.accessibilityLiveRegion).toBe('polite');
-    expect(emptyRoot.props.accessibilityLabel).toBe(
+    expect(emptyRoot.props.accessible).not.toBe(true);
+    expect(emptyAnnouncement.props.accessibilityLiveRegion).toBe('polite');
+    expect(emptyAnnouncement.props.accessibilityLabel).toBe(
       'Dashboard vazio. Adicione sua primeira transação para ver seus gráficos.'
     );
     expect(emptyButton.props.title).toBe('Adicionar transação');
+
+    act(() => emptyButton.props.onPress());
+
+    expect(onAction).toHaveBeenCalledOnce();
   });
 
   it('announces dashboard errors urgently and exposes retry', () => {
-    const tree = render(<DashboardFeedback variant="error" onAction={vi.fn()} />);
+    const onAction = vi.fn();
+    const tree = render(<DashboardFeedback variant="error" onAction={onAction} />);
     const errorRoot = tree.root.findByProps({ testID: 'dashboard-error' });
+    const errorAnnouncement = tree.root.findByProps({
+      testID: 'dashboard-error-announcement',
+    });
     const errorButton = tree.root.findByType(buttonType);
 
-    expect(errorRoot.props.accessibilityRole).toBe('alert');
-    expect(errorRoot.props.accessibilityLiveRegion).toBe('assertive');
+    expect(errorRoot.props.accessible).not.toBe(true);
+    expect(errorAnnouncement.props.accessibilityRole).toBe('alert');
+    expect(errorAnnouncement.props.accessibilityLiveRegion).toBe('assertive');
     expect(errorButton.props.title).toBe('Tentar novamente');
+
+    act(() => errorButton.props.onPress());
+
+    expect(onAction).toHaveBeenCalledOnce();
   });
 });
 
@@ -119,13 +143,6 @@ describe('DashboardSkeleton', () => {
   beforeEach(() => {
     motionMocks.reducedMotion = false;
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    if (renderer) {
-      act(() => renderer?.unmount());
-      renderer = undefined;
-    }
   });
 
   it('announces loading and stops its shared shimmer when unmounted', () => {
