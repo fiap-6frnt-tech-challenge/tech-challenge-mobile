@@ -318,6 +318,68 @@ describe('DashboardScreen', () => {
     expect(findAllByTestId(tree, 'dashboard-empty')).toHaveLength(0);
   });
 
+  it('keeps full error feedback mounted when pull refresh clears an empty context error', async () => {
+    const refresh = deferred();
+    const request = vi.fn(() => {
+      updateDashboardData({ loading: true, error: null, isEmpty: true });
+      return refresh.promise;
+    });
+    dashboardData = createDashboardData({ error: 'Sem conexão', isEmpty: true, refresh: request });
+
+    const tree = renderScreen();
+
+    act(() => refreshControl(tree).props.onRefresh());
+
+    try {
+      expect(request).toHaveBeenCalledOnce();
+      expect(findByTestId(tree, 'dashboard-error')).toBeDefined();
+      expect(findAllByTestId(tree, 'dashboard-empty')).toHaveLength(0);
+    } finally {
+      await act(async () => {
+        updateDashboardData({ loading: false, error: 'Sem conexão', isEmpty: true });
+        refresh.resolve();
+        await refresh.promise;
+        await Promise.resolve();
+      });
+    }
+
+    expect(findByTestId(tree, 'dashboard-error')).toBeDefined();
+  });
+
+  it('deduplicates rapid full-error retries until the shared request settles', async () => {
+    const retry = deferred();
+    const refresh = vi.fn(() => {
+      updateDashboardData({ loading: true, error: null, isEmpty: true });
+      return retry.promise;
+    });
+    dashboardData = createDashboardData({ error: 'Sem conexão', isEmpty: true, refresh });
+
+    const tree = renderScreen();
+    const action = tree.root.findByProps({ title: 'Tentar novamente' });
+
+    act(() => {
+      action.props.onPress();
+      action.props.onPress();
+    });
+
+    try {
+      expect(refresh).toHaveBeenCalledOnce();
+      expect(findByTestId(tree, 'dashboard-error')).toBeDefined();
+      expect(refreshControl(tree).props.refreshing).toBe(true);
+      expect(motionMocks.replay).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => {
+        updateDashboardData({ loading: false, error: 'Sem conexão', isEmpty: true });
+        retry.resolve();
+        await retry.promise;
+        await Promise.resolve();
+      });
+    }
+
+    expect(refreshControl(tree).props.refreshing).toBe(false);
+    expect(motionMocks.replay).toHaveBeenCalledOnce();
+  });
+
   it('retains the S2-06 KPI and chart content for non-empty data', () => {
     const tree = renderScreen();
 

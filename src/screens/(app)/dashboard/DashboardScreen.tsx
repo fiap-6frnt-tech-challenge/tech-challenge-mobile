@@ -75,29 +75,36 @@ export default function DashboardScreen() {
   const sectionsRef = useRef<AnimatedSectionGroupHandle>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [isEmptyErrorRetryPending, setIsEmptyErrorRetryPending] = useState(false);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const dashboardViewState = getDashboardViewState({ loading, refreshing, error, isEmpty });
   const viewState = isEmptyErrorRetryPending && isEmpty ? 'error' : dashboardViewState;
 
-  const refreshDashboard = useCallback(
-    () =>
-      runDashboardRefresh({
-        refresh,
-        setRefreshing,
-        replay: () => sectionsRef.current?.replay(),
-      }),
-    [refresh]
-  );
+  const refreshDashboard = useCallback(() => {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
+
+    const shouldPreserveEmptyError = dashboardViewState === 'error';
+    if (shouldPreserveEmptyError) setIsEmptyErrorRetryPending(true);
+
+    const request = runDashboardRefresh({
+      refresh,
+      setRefreshing,
+      replay: () => sectionsRef.current?.replay(),
+    }).finally(() => {
+      if (refreshInFlightRef.current === request) {
+        refreshInFlightRef.current = null;
+        if (shouldPreserveEmptyError) setIsEmptyErrorRetryPending(false);
+      }
+    });
+
+    refreshInFlightRef.current = request;
+    return request;
+  }, [dashboardViewState, refresh]);
 
   const handleRefresh = useCallback((): void => {
     void refreshDashboard().catch(() => undefined);
   }, [refreshDashboard]);
 
-  const handleErrorRetry = useCallback((): void => {
-    setIsEmptyErrorRetryPending(true);
-    void refreshDashboard()
-      .catch(() => undefined)
-      .finally(() => setIsEmptyErrorRetryPending(false));
-  }, [refreshDashboard]);
+  const handleErrorRetry = handleRefresh;
 
   const name = firstName(user?.displayName, user?.email);
   const currentMonth = byMonth.at(-1) ?? EMPTY_MONTH;
