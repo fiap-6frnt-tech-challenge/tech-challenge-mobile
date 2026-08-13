@@ -46,7 +46,7 @@ Para busca textual, o contrato e:
 | 02 | ⏳ | Estratégia de busca: `descriptionNormalized`, prefixo/local e índices | Dev 1 + Dev 3 | 1 dia | ⬅ 01 | [02-search-strategy.md](./02-search-strategy.md) |
 | 03 | ⏳ | `storage.service` + `storage.rules` a partir do spike | Dev 1 | 2 dias | ✅ | [02-storage-service-rules.md](./02-storage-service-rules.md) |
 | 04 | ⏳ | DS: `SearchInput`, `FilterSheet`, `Chip`, `AttachmentPicker` + stories | Dev 2 | 3 dias | ✅ | [04-ds-filters-picker.md](./04-ds-filters-picker.md) |
-| 05 | ⏳ | DS: `AttachmentList` + preview imagem/PDF + stories | Dev 2 | 1 dia | ✅ | [05-ds-attachment-list.md](./05-ds-attachment-list.md) |
+| 05 | 🟢 | DS: `AttachmentList` + preview imagem/PDF + stories | Dev 2 | 1 dia | ✅ | [05-ds-attachment-list.md](./05-ds-attachment-list.md) |
 | 06 | ⏳ | Hook `useInfiniteTransactions` | Dev 3 | 1.5 dia | ⬅ 01, 02 | [07-hook-infinite.md](./07-hook-infinite.md) |
 | 07 | ⏳ | Tela lista com FlatList, footer e estados de paginação | Dev 3 | 1.5 dia | ⬅ 06 | [08-infinite-list-screen.md](./08-infinite-list-screen.md) |
 | 08 | ⏳ | Integração de filtros e busca | Dev 3 | 1.5 dia | ⬅ 04, 06 | [09-filters-integration.md](./09-filters-integration.md) |

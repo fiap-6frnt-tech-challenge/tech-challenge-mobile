@@ -29,13 +29,13 @@ Lista os recibos anexados a uma transação, com preview e ação de remover. Us
 
 ## Validação
 
-- [ ] Mostra thumbnail p/ imagem e ícone p/ PDF
-- [ ] Tamanho formatado (KB/MB)
-- [ ] Barra de progresso durante upload
-- [ ] Remover dispara callback
-- [ ] Preview abre imagem e PDF
-- [ ] `readonly` esconde remover
-- [ ] Stories no Storybook (imagem / PDF / progresso / readonly)
+- [x] Mostra thumbnail p/ imagem e ícone p/ PDF
+- [x] Tamanho formatado (KB/MB)
+- [x] Barra de progresso durante upload
+- [x] Remover dispara callback
+- [x] Preview abre imagem e PDF
+- [x] `readonly` esconde remover
+- [x] Stories no Storybook (imagem / PDF / progresso / readonly)
 
 ## Gotchas
 
