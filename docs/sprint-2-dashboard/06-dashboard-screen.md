@@ -29,11 +29,25 @@ Monta a tela `(app)/index.tsx` juntando KPIs, gráficos e animações. Consome s
 
 ## Validação
 
-- [ ] KPIs batem com a soma real das transações
-- [ ] 3 gráficos renderizam com dados do usuário
-- [ ] Seções entram animadas (stagger) ao montar
-- [ ] Insight textual (categoria de maior gasto) aparece
-- [ ] Layout ok em 360px e tablets
+- [x] KPIs batem com a soma real das transações — saldo = `totals.balance`; entradas/saídas = último bucket de `byMonth` (mês corrente). Nenhum número é calculado na tela: só formatação e comparação mês a mês
+- [x] 3 gráficos renderizam com dados do usuário — `byMonth` / `byCategory` / `balanceOverTime` vindos do hook, séries já agregadas
+- [x] Seções entram animadas (stagger) ao montar — `AnimatedSectionGroup` + `AnimatedSection index={0..4}`; `replay()` no fim do pull-to-refresh
+- [x] Insight textual (categoria de maior gasto) aparece — `topCategory` → "Maior gasto do mês: {categoria} com {valor}, {n}% das saídas"
+- [x] Layout ok em 360px e tablets — conteúdo com `maxWidth` = 640 (teto do `useChartWidth`) + os 56px de inset (`spacing.lg` da tela + `spacing.md` do `Card`), centralizado; a linha de KPIs tem só 2 tiles
+
+> Verificado estaticamente (`tsc --noEmit`, `eslint`, `prettier`). **Falta rodar em device/emulador:** conferir a
+> cascata a olho, o layout em 360px/tablet e o pull-to-refresh. Estados de vazio/carregando/erro são a Task 07 —
+> hoje o primeiro load mostra os gráficos vazios em vez de skeleton.
+
+## Dados de demonstração
+
+```bash
+npm run seed -- --email=voce@exemplo.com --password=suaSenha [--months=6] [--reset] [--dry-run]
+```
+
+Autentica com um usuário já cadastrado, gera salário/aluguel/mercado/transporte/lazer/saúde/educação nos últimos
+N meses (nunca datas futuras, `amount` sempre positivo) e grava em `users/{uid}/transactions`. Ao final imprime
+entradas/saídas/saldo — dá para conferir os KPIs da tela contra esses números.
 
 ## Gotchas
 
