@@ -2,6 +2,7 @@ import {
   createElement,
   forwardRef,
   useImperativeHandle,
+  useSyncExternalStore,
   type ElementType,
   type ReactNode,
 } from 'react';
@@ -16,6 +17,7 @@ type DashboardData = ReturnType<typeof useDashboardData>;
 
 const routerMocks = vi.hoisted(() => ({ push: vi.fn() }));
 const motionMocks = vi.hoisted(() => ({ replay: vi.fn() }));
+const dashboardStore = vi.hoisted(() => ({ listeners: new Set<() => void>() }));
 
 vi.mock('expo-router', () => ({
   useRouter: () => ({ push: routerMocks.push }),
@@ -111,7 +113,14 @@ vi.mock('@/src/contexts/AuthContext', () => ({
 }));
 
 vi.mock('@/src/hooks/useDashboardData', () => ({
-  useDashboardData: () => dashboardData,
+  useDashboardData: () =>
+    useSyncExternalStore(
+      (listener) => {
+        dashboardStore.listeners.add(listener);
+        return () => dashboardStore.listeners.delete(listener);
+      },
+      () => dashboardData
+    ),
 }));
 
 vi.mock('@/src/theme', () => ({
@@ -120,6 +129,7 @@ vi.mock('@/src/theme', () => ({
     colors: {
       background: '#fff',
       badgeTransferBg: '#eee',
+      badgeWithdrawBg: '#fee',
       primary: '#6841f2',
       text: '#111',
     },
@@ -180,17 +190,34 @@ function refreshControl(tree: ReactTestRenderer) {
   return tree.root.findByType(scrollViewType).props.refreshControl;
 }
 
+function updateDashboardData(overrides: Partial<DashboardData>) {
+  dashboardData = { ...dashboardData, ...overrides };
+  dashboardStore.listeners.forEach((listener) => listener());
+}
+
+function expectDashboardContent(tree: ReactTestRenderer) {
+  expect(findByTestId(tree, 'dashboard-balance')).toBeDefined();
+  expect(findByTestId(tree, 'dashboard-income')).toBeDefined();
+  expect(findByTestId(tree, 'dashboard-expense')).toBeDefined();
+  expect(findByTestId(tree, 'dashboard-bar-chart')).toBeDefined();
+  expect(findByTestId(tree, 'dashboard-pie-chart')).toBeDefined();
+  expect(findByTestId(tree, 'dashboard-line-chart')).toBeDefined();
+}
+
 function deferred() {
   let resolve!: () => void;
-  const promise = new Promise<void>((done) => {
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<void>((done, fail) => {
     resolve = done;
+    reject = fail;
   });
 
-  return { promise, resolve };
+  return { promise, resolve, reject };
 }
 
 beforeEach(() => {
   dashboardData = createDashboardData();
+  dashboardStore.listeners.clear();
   vi.clearAllMocks();
 });
 
@@ -223,35 +250,78 @@ describe('DashboardScreen', () => {
     expect(routerMocks.push).toHaveBeenCalledWith('/transactionAdd');
   });
 
-  it('retries a full dashboard error before replaying the animated sections', async () => {
-    const events: string[] = [];
-    dashboardData = createDashboardData({
-      error: 'Sem conexão',
-      isEmpty: true,
-      refresh: vi.fn(async () => {
-        events.push('refresh');
-      }),
+  it('keeps full error feedback mounted while an empty retry clears the context error', async () => {
+    const retry = deferred();
+    const refresh = vi.fn(() => {
+      updateDashboardData({ loading: true, error: null, isEmpty: true });
+      return retry.promise;
     });
-    motionMocks.replay.mockImplementation(() => events.push('replay'));
+    dashboardData = createDashboardData({ error: 'Sem conexão', isEmpty: true, refresh });
 
     const tree = renderScreen();
     const action = tree.root.findByProps({ title: 'Tentar novamente' });
+    let result: unknown;
 
-    await act(async () => {
-      await action.props.onPress();
+    act(() => {
+      result = action.props.onPress();
     });
 
+    try {
+      expect(refresh).toHaveBeenCalledOnce();
+      expect(findByTestId(tree, 'dashboard-error')).toBeDefined();
+      expect(findAllByTestId(tree, 'dashboard-empty')).toHaveLength(0);
+    } finally {
+      await act(async () => {
+        updateDashboardData({ loading: false, error: null, isEmpty: false });
+        retry.resolve();
+        await retry.promise;
+        await result;
+        await Promise.resolve();
+      });
+    }
+
+    expect(result).toBeUndefined();
+    expectDashboardContent(tree);
+    expect(findAllByTestId(tree, 'dashboard-error')).toHaveLength(0);
+  });
+
+  it('returns to full error feedback when an empty retry completes with an error', async () => {
+    const retry = deferred();
+    const refresh = vi.fn(() => {
+      updateDashboardData({ loading: true, error: null, isEmpty: true });
+      return retry.promise;
+    });
+    dashboardData = createDashboardData({ error: 'Sem conexão', isEmpty: true, refresh });
+
+    const tree = renderScreen();
+    const action = tree.root.findByProps({ title: 'Tentar novamente' });
+    let result: unknown;
+
+    act(() => {
+      result = action.props.onPress();
+    });
+
+    try {
+      expect(findByTestId(tree, 'dashboard-error')).toBeDefined();
+      expect(findAllByTestId(tree, 'dashboard-empty')).toHaveLength(0);
+    } finally {
+      await act(async () => {
+        updateDashboardData({ loading: false, error: 'Sem conexão', isEmpty: true });
+        retry.resolve();
+        await retry.promise;
+        await result;
+        await Promise.resolve();
+      });
+    }
+
     expect(findByTestId(tree, 'dashboard-error')).toBeDefined();
-    expect(events).toEqual(['refresh', 'replay']);
+    expect(findAllByTestId(tree, 'dashboard-empty')).toHaveLength(0);
   });
 
   it('retains the S2-06 KPI and chart content for non-empty data', () => {
     const tree = renderScreen();
 
-    expect(findByTestId(tree, 'dashboard-balance')).toBeDefined();
-    expect(findByTestId(tree, 'dashboard-bar-chart')).toBeDefined();
-    expect(findByTestId(tree, 'dashboard-pie-chart')).toBeDefined();
-    expect(findByTestId(tree, 'dashboard-line-chart')).toBeDefined();
+    expectDashboardContent(tree);
   });
 
   it('keeps content visible behind the pull-to-refresh spinner until refresh resolves', async () => {
@@ -265,8 +335,11 @@ describe('DashboardScreen', () => {
       void control.props.onRefresh();
     });
 
+    expect(dashboardData.refresh).toHaveBeenCalledOnce();
     expect(refreshControl(tree).props.refreshing).toBe(true);
     expect(findAllByTestId(tree, 'dashboard-skeleton')).toHaveLength(0);
+    expectDashboardContent(tree);
+    expect(motionMocks.replay).not.toHaveBeenCalled();
 
     await act(async () => {
       refresh.resolve();
@@ -277,20 +350,69 @@ describe('DashboardScreen', () => {
     expect(motionMocks.replay).toHaveBeenCalledOnce();
   });
 
-  it('keeps content visible and announces a failed refresh inline', () => {
+  it('keeps content visible and announces a failed refresh with a separately focusable retry', () => {
     dashboardData = createDashboardData({ error: 'Não foi possível atualizar os dados' });
 
     const tree = renderScreen();
-    const error = findByTestId(tree, 'dashboard-refresh-error');
+    const errorRoot = findByTestId(tree, 'dashboard-refresh-error');
+    const announcement = findByTestId(tree, 'dashboard-refresh-error-announcement');
+    const action = errorRoot.findByProps({ title: 'Tentar novamente' });
 
-    expect(findByTestId(tree, 'dashboard-balance')).toBeDefined();
-    expect(findByTestId(tree, 'dashboard-bar-chart')).toBeDefined();
-    expect(findByTestId(tree, 'dashboard-pie-chart')).toBeDefined();
-    expect(findByTestId(tree, 'dashboard-line-chart')).toBeDefined();
-    expect(error.props.accessibilityRole).toBe('alert');
-    expect(error.props.accessibilityLiveRegion).toBe('assertive');
-    expect(error.props.accessibilityLabel).toBe(
+    expectDashboardContent(tree);
+    expect(errorRoot.props.accessible).not.toBe(true);
+    expect(announcement.parent).toBe(errorRoot);
+    expect(action.parent).toBe(errorRoot);
+    expect(announcement.props.accessibilityRole).toBe('alert');
+    expect(announcement.props.accessibilityLiveRegion).toBe('assertive');
+    expect(announcement.props.accessibilityLabel).toBe(
       'Não foi possível atualizar os dados. Dados anteriores continuam visíveis.'
     );
+  });
+
+  it('invokes inline stale-data retry through a void event handler', async () => {
+    dashboardData = createDashboardData({ error: 'Não foi possível atualizar os dados' });
+
+    const tree = renderScreen();
+    const action = findByTestId(tree, 'dashboard-refresh-error').findByProps({
+      title: 'Tentar novamente',
+    });
+    let result: unknown;
+
+    await act(async () => {
+      result = action.props.onPress();
+      await Promise.resolve();
+    });
+
+    expect(result).toBeUndefined();
+    expect(dashboardData.refresh).toHaveBeenCalledOnce();
+    expect(motionMocks.replay).toHaveBeenCalledOnce();
+  });
+
+  it('consumes rejected pull refreshes after cleanup and replay at the event boundary', async () => {
+    const refresh = deferred();
+    dashboardData = createDashboardData({ refresh: vi.fn(() => refresh.promise) });
+
+    const tree = renderScreen();
+    const control = refreshControl(tree);
+    let result: unknown;
+
+    act(() => {
+      result = control.props.onRefresh();
+    });
+
+    try {
+      expect(result).toBeUndefined();
+      expect(refreshControl(tree).props.refreshing).toBe(true);
+    } finally {
+      await act(async () => {
+        refresh.reject(new Error('offline'));
+        await Promise.resolve();
+        await Promise.resolve();
+        await (result instanceof Promise ? result.catch(() => undefined) : undefined);
+      });
+    }
+
+    expect(refreshControl(tree).props.refreshing).toBe(false);
+    expect(motionMocks.replay).toHaveBeenCalledOnce();
   });
 });

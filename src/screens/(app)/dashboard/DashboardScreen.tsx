@@ -74,9 +74,11 @@ export default function DashboardScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const sectionsRef = useRef<AnimatedSectionGroupHandle>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const viewState = getDashboardViewState({ loading, refreshing, error, isEmpty });
+  const [isEmptyErrorRetryPending, setIsEmptyErrorRetryPending] = useState(false);
+  const dashboardViewState = getDashboardViewState({ loading, refreshing, error, isEmpty });
+  const viewState = isEmptyErrorRetryPending && isEmpty ? 'error' : dashboardViewState;
 
-  const handleRefresh = useCallback(
+  const refreshDashboard = useCallback(
     () =>
       runDashboardRefresh({
         refresh,
@@ -85,6 +87,17 @@ export default function DashboardScreen() {
       }),
     [refresh]
   );
+
+  const handleRefresh = useCallback((): void => {
+    void refreshDashboard().catch(() => undefined);
+  }, [refreshDashboard]);
+
+  const handleErrorRetry = useCallback((): void => {
+    setIsEmptyErrorRetryPending(true);
+    void refreshDashboard()
+      .catch(() => undefined)
+      .finally(() => setIsEmptyErrorRetryPending(false));
+  }, [refreshDashboard]);
 
   const name = firstName(user?.displayName, user?.email);
   const currentMonth = byMonth.at(-1) ?? EMPTY_MONTH;
@@ -119,7 +132,7 @@ export default function DashboardScreen() {
           {viewState === 'loading' ? <DashboardSkeleton /> : null}
 
           {viewState === 'error' ? (
-            <DashboardFeedback variant="error" onAction={handleRefresh} />
+            <DashboardFeedback variant="error" onAction={handleErrorRetry} />
           ) : null}
 
           {viewState === 'empty' ? (
@@ -129,13 +142,15 @@ export default function DashboardScreen() {
           {viewState === 'content' ? (
             <>
               {error && !isEmpty ? (
-                <View
-                  style={styles.inlineError}
-                  accessibilityRole="alert"
-                  accessibilityLiveRegion="assertive"
-                  accessibilityLabel={`${error}. Dados anteriores continuam visíveis.`}
-                  testID="dashboard-refresh-error">
-                  <Text color="danger">{error}. Dados anteriores continuam visíveis.</Text>
+                <View style={styles.inlineError} testID="dashboard-refresh-error">
+                  <View
+                    testID="dashboard-refresh-error-announcement"
+                    accessible
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="assertive"
+                    accessibilityLabel={`${error}. Dados anteriores continuam visíveis.`}>
+                    <Text color="danger">{error}. Dados anteriores continuam visíveis.</Text>
+                  </View>
                   <Button title="Tentar novamente" variant="secondary" onPress={handleRefresh} />
                 </View>
               ) : null}
