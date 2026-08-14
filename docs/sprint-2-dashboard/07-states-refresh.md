@@ -43,8 +43,8 @@ Polimento de UX do dashboard: os três estados não-felizes e o refresh, com ace
 
 Resultados registrados após executar localmente:
 
-- `npx vitest run 'src/components/features/dashboard/DashboardStates.test.tsx' 'src/screens/(app)/dashboard/dashboardState.test.ts' 'src/screens/(app)/dashboard/DashboardScreen.test.tsx'` — 3 arquivos e 24 testes passaram.
-- `npm run test:domain` — 14 arquivos e 164 testes passaram.
+- `npx vitest run 'src/components/features/dashboard/DashboardStates.test.tsx' 'src/screens/(app)/dashboard/dashboardState.test.ts' 'src/screens/(app)/dashboard/DashboardScreen.test.tsx'` — 3 arquivos e 29 testes passaram.
+- `npm run test:domain` — 14 arquivos e 169 testes passaram.
 - `npm run lint` — ESLint passou e todos os arquivos verificados pelo Prettier estão formatados.
 - `npx tsc --noEmit` — passou sem erros.
 - `git diff --check phase-3...dev1-fb/dashboard-states` — passou sem erros.
