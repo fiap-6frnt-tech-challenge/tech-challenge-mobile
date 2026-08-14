@@ -1,6 +1,6 @@
 import { ChartNoAxesCombined, TriangleAlert } from 'lucide-react-native';
-import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { AccessibilityInfo, Platform, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/src/components/ui/Button';
 import { Text } from '@/src/components/ui/Text';
@@ -31,6 +31,12 @@ export function DashboardFeedback({ variant, onAction }: DashboardFeedbackProps)
   const styles = useMemo(() => createStyles(theme), [theme]);
   const content = feedback[variant];
   const Icon = variant === 'empty' ? ChartNoAxesCombined : TriangleAlert;
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AccessibilityInfo.announceForAccessibility(content.accessibilityLabel);
+    }
+  }, [content.accessibilityLabel]);
 
   return (
     <View testID={`dashboard-${variant}`} style={styles.root}>

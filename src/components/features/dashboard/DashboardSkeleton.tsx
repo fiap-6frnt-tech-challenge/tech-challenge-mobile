@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Animated, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  AccessibilityInfo,
+  Animated,
+  Platform,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { Card } from '@/src/components/ui/Card';
 import { useReduceMotion } from '@/src/hooks/useReduceMotion';
@@ -32,7 +40,10 @@ export function DashboardSkeleton() {
   const [shimmer] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    if (reduceMotion) return;
+    if (reduceMotion) {
+      shimmer.setValue(0);
+      return;
+    }
 
     shimmer.setValue(0);
     const animation = Animated.loop(
@@ -47,6 +58,12 @@ export function DashboardSkeleton() {
     animation.start();
     return () => animation.stop();
   }, [reduceMotion, shimmer]);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AccessibilityInfo.announceForAccessibility('Carregando dashboard financeiro');
+    }
+  }, []);
 
   return (
     <View

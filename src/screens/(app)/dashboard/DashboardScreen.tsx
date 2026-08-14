@@ -1,7 +1,14 @@
 import { ArrowDownLeft, ArrowUpRight, Lightbulb, Wallet } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DashboardFeedback } from '@/src/components/features/dashboard/DashboardFeedback';
@@ -78,6 +85,14 @@ export default function DashboardScreen() {
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const dashboardViewState = getDashboardViewState({ loading, refreshing, error, isEmpty });
   const viewState = isEmptyErrorRetryPending && isEmpty ? 'error' : dashboardViewState;
+  const inlineErrorAccessibilityLabel =
+    error && !isEmpty ? `${error}. Dados anteriores continuam visíveis.` : null;
+
+  useEffect(() => {
+    if (Platform.OS === 'ios' && inlineErrorAccessibilityLabel) {
+      AccessibilityInfo.announceForAccessibility(inlineErrorAccessibilityLabel);
+    }
+  }, [inlineErrorAccessibilityLabel]);
 
   const refreshDashboard = useCallback(() => {
     if (refreshInFlightRef.current) return refreshInFlightRef.current;
@@ -148,15 +163,15 @@ export default function DashboardScreen() {
 
           {viewState === 'content' ? (
             <>
-              {error && !isEmpty ? (
+              {inlineErrorAccessibilityLabel ? (
                 <View style={styles.inlineError} testID="dashboard-refresh-error">
                   <View
                     testID="dashboard-refresh-error-announcement"
                     accessible
                     accessibilityRole="alert"
                     accessibilityLiveRegion="assertive"
-                    accessibilityLabel={`${error}. Dados anteriores continuam visíveis.`}>
-                    <Text color="danger">{error}. Dados anteriores continuam visíveis.</Text>
+                    accessibilityLabel={inlineErrorAccessibilityLabel}>
+                    <Text color="danger">{inlineErrorAccessibilityLabel}</Text>
                   </View>
                   <Button title="Tentar novamente" variant="secondary" onPress={handleRefresh} />
                 </View>

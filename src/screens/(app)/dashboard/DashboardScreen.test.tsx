@@ -18,12 +18,22 @@ type DashboardData = ReturnType<typeof useDashboardData>;
 const routerMocks = vi.hoisted(() => ({ push: vi.fn() }));
 const motionMocks = vi.hoisted(() => ({ replay: vi.fn() }));
 const dashboardStore = vi.hoisted(() => ({ listeners: new Set<() => void>() }));
+const nativeMocks = vi.hoisted(() => ({
+  announceForAccessibility: vi.fn(),
+  platformOS: 'android',
+}));
 
 vi.mock('expo-router', () => ({
   useRouter: () => ({ push: routerMocks.push }),
 }));
 
 vi.mock('react-native', () => ({
+  AccessibilityInfo: { announceForAccessibility: nativeMocks.announceForAccessibility },
+  Platform: {
+    get OS() {
+      return nativeMocks.platformOS;
+    },
+  },
   RefreshControl: 'RefreshControl',
   ScrollView: 'ScrollView',
   StyleSheet: { create: <T,>(styles: T) => styles },
@@ -218,6 +228,7 @@ function deferred() {
 beforeEach(() => {
   dashboardData = createDashboardData();
   dashboardStore.listeners.clear();
+  nativeMocks.platformOS = 'android';
   vi.clearAllMocks();
 });
 
@@ -429,6 +440,40 @@ describe('DashboardScreen', () => {
     expect(announcement.props.accessibilityLabel).toBe(
       'Não foi possível atualizar os dados. Dados anteriores continuam visíveis.'
     );
+    expect(nativeMocks.announceForAccessibility).not.toHaveBeenCalled();
+  });
+
+  it('announces a newly present stale-data error once on iOS', () => {
+    nativeMocks.platformOS = 'ios';
+    const tree = renderScreen();
+    const label = 'Não foi possível atualizar os dados. Dados anteriores continuam visíveis.';
+
+    act(() => {
+      updateDashboardData({ error: 'Não foi possível atualizar os dados' });
+    });
+
+    expect(
+      findByTestId(tree, 'dashboard-refresh-error-announcement').props.accessibilityLabel
+    ).toBe(label);
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledOnce();
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledWith(label);
+
+    act(() => {
+      updateDashboardData({ totals: { ...dashboardData.totals } });
+    });
+
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledOnce();
+  });
+
+  it('does not explicitly announce a newly present stale-data error on Android', () => {
+    const tree = renderScreen();
+
+    act(() => {
+      updateDashboardData({ error: 'Não foi possível atualizar os dados' });
+    });
+
+    expect(findByTestId(tree, 'dashboard-refresh-error-announcement')).toBeDefined();
+    expect(nativeMocks.announceForAccessibility).not.toHaveBeenCalled();
   });
 
   it('invokes inline stale-data retry through a void event handler', async () => {

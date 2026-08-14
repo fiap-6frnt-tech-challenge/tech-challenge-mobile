@@ -9,24 +9,44 @@ const nativeMocks = vi.hoisted(() => {
   const loopStart = vi.fn();
   const loopStop = vi.fn();
   const loop = vi.fn(() => ({ start: loopStart, stop: loopStop }));
+  const announceForAccessibility = vi.fn();
+  const values: { setValue: ReturnType<typeof vi.fn> }[] = [];
 
   class AnimatedValue {
     interpolate = vi.fn(() => 0);
 
     setValue = vi.fn();
+
+    constructor() {
+      values.push(this);
+    }
   }
 
-  return { loop, loopStart, loopStop, AnimatedValue };
+  return {
+    loop,
+    loopStart,
+    loopStop,
+    announceForAccessibility,
+    values,
+    platformOS: 'android',
+    AnimatedValue,
+  };
 });
 
 const motionMocks = vi.hoisted(() => ({ reducedMotion: false }));
 
 vi.mock('react-native', () => ({
+  AccessibilityInfo: { announceForAccessibility: nativeMocks.announceForAccessibility },
   Animated: {
     Value: nativeMocks.AnimatedValue,
     View: 'AnimatedView',
     loop: nativeMocks.loop,
     timing: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
+  },
+  Platform: {
+    get OS() {
+      return nativeMocks.platformOS;
+    },
   },
   StyleSheet: { create: <T,>(styles: T) => styles },
   View: 'View',
@@ -98,7 +118,13 @@ afterEach(() => {
 });
 
 describe('DashboardFeedback', () => {
-  it('announces the empty dashboard and exposes its primary action', () => {
+  beforeEach(() => {
+    nativeMocks.platformOS = 'android';
+    vi.clearAllMocks();
+  });
+
+  it('announces the empty dashboard on iOS only and exposes its primary action', () => {
+    nativeMocks.platformOS = 'ios';
     const onAction = vi.fn();
     const tree = render(<DashboardFeedback variant="empty" onAction={onAction} />);
     const emptyRoot = tree.root.findByProps({ testID: 'dashboard-empty' });
@@ -112,14 +138,25 @@ describe('DashboardFeedback', () => {
     expect(emptyAnnouncement.props.accessibilityLabel).toBe(
       'Dashboard vazio. Adicione sua primeira transação para ver seus gráficos.'
     );
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledOnce();
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledWith(
+      'Dashboard vazio. Adicione sua primeira transação para ver seus gráficos.'
+    );
     expect(emptyButton.props.title).toBe('Adicionar transação');
+
+    act(() => {
+      tree.update(<DashboardFeedback variant="empty" onAction={onAction} />);
+    });
+
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledOnce();
 
     act(() => emptyButton.props.onPress());
 
     expect(onAction).toHaveBeenCalledOnce();
   });
 
-  it('announces dashboard errors urgently and exposes retry', () => {
+  it('announces dashboard errors on iOS only and exposes retry', () => {
+    nativeMocks.platformOS = 'ios';
     const onAction = vi.fn();
     const tree = render(<DashboardFeedback variant="error" onAction={onAction} />);
     const errorRoot = tree.root.findByProps({ testID: 'dashboard-error' });
@@ -131,21 +168,35 @@ describe('DashboardFeedback', () => {
     expect(errorRoot.props.accessible).not.toBe(true);
     expect(errorAnnouncement.props.accessibilityRole).toBe('alert');
     expect(errorAnnouncement.props.accessibilityLiveRegion).toBe('assertive');
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledOnce();
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledWith(
+      'Erro ao carregar o dashboard. Verifique sua conexão e tente novamente.'
+    );
     expect(errorButton.props.title).toBe('Tentar novamente');
 
     act(() => errorButton.props.onPress());
 
     expect(onAction).toHaveBeenCalledOnce();
   });
+
+  it('does not explicitly announce feedback on Android', () => {
+    render(<DashboardFeedback variant="empty" onAction={vi.fn()} />);
+    render(<DashboardFeedback variant="error" onAction={vi.fn()} />);
+
+    expect(nativeMocks.announceForAccessibility).not.toHaveBeenCalled();
+  });
 });
 
 describe('DashboardSkeleton', () => {
   beforeEach(() => {
     motionMocks.reducedMotion = false;
+    nativeMocks.platformOS = 'android';
+    nativeMocks.values.length = 0;
     vi.clearAllMocks();
   });
 
-  it('announces loading and stops its shared shimmer when unmounted', () => {
+  it('announces loading on iOS only and stops its shared shimmer when unmounted', () => {
+    nativeMocks.platformOS = 'ios';
     const tree = render(<DashboardSkeleton />);
     const skeletonRoot = tree.root.findByProps({ testID: 'dashboard-skeleton' });
 
@@ -153,6 +204,10 @@ describe('DashboardSkeleton', () => {
     expect(skeletonRoot.props.accessibilityRole).toBe('progressbar');
     expect(skeletonRoot.props.accessibilityState).toEqual({ busy: true });
     expect(nativeMocks.loopStart).toHaveBeenCalledOnce();
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledOnce();
+    expect(nativeMocks.announceForAccessibility).toHaveBeenCalledWith(
+      'Carregando dashboard financeiro'
+    );
     expect(nativeMocks.loop).toHaveBeenCalledWith(expect.anything(), {
       resetBeforeIteration: true,
     });
@@ -169,5 +224,25 @@ describe('DashboardSkeleton', () => {
     render(<DashboardSkeleton />);
 
     expect(nativeMocks.loopStart).not.toHaveBeenCalled();
+  });
+
+  it('does not explicitly announce loading on Android', () => {
+    render(<DashboardSkeleton />);
+
+    expect(nativeMocks.announceForAccessibility).not.toHaveBeenCalled();
+  });
+
+  it('stops and resets the shimmer when reduced motion is enabled after mounting', () => {
+    const tree = render(<DashboardSkeleton />);
+    const shimmer = nativeMocks.values[0];
+
+    motionMocks.reducedMotion = true;
+    act(() => {
+      tree.update(<DashboardSkeleton />);
+    });
+
+    expect(nativeMocks.loopStop).toHaveBeenCalledOnce();
+    expect(shimmer.setValue).toHaveBeenCalledTimes(2);
+    expect(shimmer.setValue).toHaveBeenLastCalledWith(0);
   });
 });
