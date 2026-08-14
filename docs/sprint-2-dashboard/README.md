@@ -32,6 +32,8 @@
 | 07 | ⏳ | Pull-to-refresh + estados + performance com 100+ transações (implementação concluída; smoke em device pendente) | Dev 3 | 1 dia | ⬅ 06 | [07-states-refresh.md](./07-states-refresh.md) |
 | 08 | ⏳ | Testes + smoke visual | Todos | 1 dia | ⬅ impl | [08-tests-smoke.md](./08-tests-smoke.md) |
 
+> **Task 07 permanece ⏳:** blockers restantes são smoke em dispositivo/OS, VoiceOver/TalkBack, animações e Reduzir Movimento, fluxo offline/retry, e validação com 100+ transações.
+
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
 
 ---

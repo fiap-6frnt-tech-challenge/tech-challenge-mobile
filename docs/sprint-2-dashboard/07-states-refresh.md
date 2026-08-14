@@ -25,8 +25,9 @@ Polimento de UX do dashboard: os três estados não-felizes e o refresh, com ace
 
 - `DashboardFeedback` implementa os estados vazio e erro, com CTA, retry e anúncios acessíveis.
 - `DashboardSkeleton` cobre o primeiro carregamento com blocos não focáveis e suporte à redução de movimento.
-- `dashboardState` concentra a seleção de estado e o fluxo de refresh, incluindo replay após sucesso e limpeza após falha.
+- `dashboardState` concentra a seleção de estado; `runDashboardRefresh` liga o spinner, aguarda `refresh()` e, em `finally`, limpa o spinner e dispara `replay()`, tanto em sucesso quanto em falha.
 - `DashboardScreen` integra skeleton, feedback, `RefreshControl`, CTA para `/transactionAdd`, erro inline com dados anteriores e retry.
+- `DashboardScreen` também é dona da preservação do erro vazio durante retry e da deduplicação por requisição em voo; `dashboardState` não mantém esse estado de tela.
 - Testes de componentes, tela e helpers cobrem estados, acessibilidade estrutural, rota, refresh, retry, deduplicação de requisições e erro com dados anteriores.
 - O refresh mantém o conteúdo enquanto o spinner está ativo, não duplica requisições concorrentes e exibe erro inline sem remover os dados anteriores.
 
