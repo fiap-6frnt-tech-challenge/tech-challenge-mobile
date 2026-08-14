@@ -29,7 +29,7 @@
 | 04 | 🟢 | Animações `Animated` entre seções do dashboard | Dev 2 | 2 dias | ⬅ 03 | [04-animated-sections.md](./04-animated-sections.md) |
 | 05 | ⏳ | Hook `useDashboardData` | Dev 3 | 1 dia | ⬅ 01 | [05-hook-dashboard-data.md](./05-hook-dashboard-data.md) |
 | 06 | 🟢 | Tela Dashboard: KPIs + 3 gráficos + insight textual | Dev 3 | 2.5 dias | ⬅ 02, 03, 05 | [06-dashboard-screen.md](./06-dashboard-screen.md) |
-| 07 | ⏳ | Pull-to-refresh + estados + performance com 100+ transações | Dev 3 | 1 dia | ⬅ 06 | [07-states-refresh.md](./07-states-refresh.md) |
+| 07 | ⏳ | Pull-to-refresh + estados + performance com 100+ transações (implementação concluída; smoke em device pendente) | Dev 3 | 1 dia | ⬅ 06 | [07-states-refresh.md](./07-states-refresh.md) |
 | 08 | ⏳ | Testes + smoke visual | Todos | 1 dia | ⬅ impl | [08-tests-smoke.md](./08-tests-smoke.md) |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
