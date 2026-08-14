@@ -47,7 +47,7 @@ Resultados registrados após executar localmente:
 - `npm run test:domain` — 14 arquivos e 164 testes passaram.
 - `npm run lint` — ESLint passou e todos os arquivos verificados pelo Prettier estão formatados.
 - `npx tsc --noEmit` — passou sem erros.
-- `git diff --check` — passou sem erros.
+- `git diff --check main...dev1-fb/dashboard-states` — passou sem erros.
 
 ## Validação manual
 
