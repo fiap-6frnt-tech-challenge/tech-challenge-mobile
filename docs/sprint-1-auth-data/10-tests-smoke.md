@@ -1,4 +1,4 @@
-# Task 10 — Testes + smoke + vídeo curto
+# Task 10 — Testes + smoke + vídeo curto ✅
 
 | | |
 | --- | --- |
@@ -35,6 +35,6 @@ Registrar → login → lista → logout. Serve de checkpoint interno e rascunho
 
 ## Validação
 
-- [ ] Todos os testes passam em CI
-- [ ] Roteiro de smoke ✅ em Android e iOS (ou Android + emulador)
-- [ ] Cross-user negado confirmado
+- [X] Todos os testes passam em CI
+- [X] Roteiro de smoke ✅ em Android e iOS (ou Android + emulador)
+- [X] Cross-user negado confirmado
