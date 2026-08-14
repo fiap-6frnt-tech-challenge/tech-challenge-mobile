@@ -2,7 +2,6 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Transaction } from '../domain';
-import { useAuth } from './AuthContext';
 import { TransactionProvider, useTransactions, reducer, initialState } from './TransactionContext';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
@@ -28,17 +27,17 @@ vi.mock('../services/transactions.service', () => ({
 }));
 
 type TransactionsValue = ReturnType<typeof useTransactions>;
-let latestTransactionsValue: TransactionsValue | undefined;
+const probeRef: { current: TransactionsValue | undefined } = { current: undefined };
 let renderer: ReactTestRenderer | undefined;
 
 function TransactionsProbe() {
-  latestTransactionsValue = useTransactions();
+  probeRef.current = useTransactions();
   return null;
 }
 
 function currentTransactions(): TransactionsValue {
-  if (!latestTransactionsValue) throw new Error('TransactionProvider has not rendered');
-  return latestTransactionsValue;
+  if (!probeRef.current) throw new Error('TransactionProvider has not rendered');
+  return probeRef.current;
 }
 
 function renderProvider(): void {
@@ -112,7 +111,7 @@ describe('TransactionContext reducer', () => {
 describe('TransactionProvider integration', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    latestTransactionsValue = undefined;
+    probeRef.current = undefined;
     renderer = undefined;
   });
 
