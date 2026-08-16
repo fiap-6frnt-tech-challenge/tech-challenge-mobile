@@ -19,7 +19,7 @@ interface TransactionsContext extends TransactionState {
 type TransactionAction =
   { type: 'LOADING' } | { type: 'LOADED'; items: Transaction[] } | { type: 'ERROR'; error: string };
 
-function reducer(state: TransactionState, action: TransactionAction): TransactionState {
+export function reducer(state: TransactionState, action: TransactionAction): TransactionState {
   switch (action.type) {
     case 'LOADING':
       return { ...state, loading: true, error: null };
@@ -32,7 +32,7 @@ function reducer(state: TransactionState, action: TransactionAction): Transactio
   }
 }
 
-const initialState: TransactionState = {
+export const initialState: TransactionState = {
   items: [],
   loading: false,
   error: null,
