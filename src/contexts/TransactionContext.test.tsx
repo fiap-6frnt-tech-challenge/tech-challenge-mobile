@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -27,17 +28,22 @@ vi.mock('../services/transactions.service', () => ({
 }));
 
 type TransactionsValue = ReturnType<typeof useTransactions>;
-const probeRef: { current: TransactionsValue | undefined } = { current: undefined };
+let currentTransactionsValue: TransactionsValue | undefined;
 let renderer: ReactTestRenderer | undefined;
 
 function TransactionsProbe() {
-  probeRef.current = useTransactions();
+  const value = useTransactions();
+  
+  useEffect(() => {
+    currentTransactionsValue = value;
+  }, [value]);
+
   return null;
 }
 
 function currentTransactions(): TransactionsValue {
-  if (!probeRef.current) throw new Error('TransactionProvider has not rendered');
-  return probeRef.current;
+  if (!currentTransactionsValue) throw new Error('TransactionProvider has not rendered');
+  return currentTransactionsValue;
 }
 
 function renderProvider(): void {
@@ -49,6 +55,12 @@ function renderProvider(): void {
     );
   });
 }
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  currentTransactionsValue = undefined;
+  renderer = undefined;
+});
 
 describe('TransactionContext reducer', () => {
   it('should return the initial state', () => {
@@ -111,7 +123,6 @@ describe('TransactionContext reducer', () => {
 describe('TransactionProvider integration', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    probeRef.current = undefined;
     renderer = undefined;
   });
 
