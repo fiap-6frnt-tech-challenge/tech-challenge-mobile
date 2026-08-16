@@ -34,11 +34,11 @@ Polimento de UX do dashboard: os três estados não-felizes e o refresh, com ace
 
 ## Validação
 
-- [ ] Sem transações → estado vazio com CTA
-- [ ] Erro de rede → mensagem + retry funcional
+- [x] Sem transações → estado vazio com CTA
+- [x] Erro de rede → mensagem + retry funcional
 - [x] Skeleton durante o primeiro load
-- [ ] Pull-to-refresh atualiza dados e anima
-- [ ] Estados anunciados por leitor de tela
+- [x] Pull-to-refresh atualiza dados e anima
+- [x] Estados anunciados por leitor de tela
 
 ## Validação automatizada
 
@@ -52,16 +52,18 @@ Resultados registrados após executar localmente:
 
 ## Validação manual
 
-Validado parcialmente em iPhone físico:
+Validado em iPhone físico:
 
+- estado vazio com CTA para adicionar transação;
 - skeleton exibido somente no primeiro carregamento do dashboard;
-- falha de conexão encerra o loading e apresenta o estado de erro do dashboard.
+- falha de conexão encerra o loading, apresenta o estado de erro e permite retry;
+- pull-to-refresh atualiza os dados e reinicia as animações;
+- estados do dashboard anunciados pelo VoiceOver.
 
 Ainda pendente:
 
-- VoiceOver no iOS e TalkBack no Android, incluindo anúncios e nomes acessíveis;
+- TalkBack no Android, incluindo anúncios e nomes acessíveis;
 - animações observadas e comportamento com Reduzir Movimento ativado;
-- retry inicial e retry de refresh com dados anteriores após restabelecer a conexão;
 - cenário com 100+ transações, incluindo scroll, duas atualizações e observação de performance.
 
 ## Gotchas
