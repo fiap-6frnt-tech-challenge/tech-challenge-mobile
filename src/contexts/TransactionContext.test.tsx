@@ -33,7 +33,7 @@ let renderer: ReactTestRenderer | undefined;
 
 function TransactionsProbe() {
   const value = useTransactions();
-  
+
   useEffect(() => {
     currentTransactionsValue = value;
   }, [value]);

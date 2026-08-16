@@ -5,13 +5,22 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 const host = '127.0.0.1';
-const port = 8080;
+const port = 8089;
 
 async function isEmulatorRunning(): Promise<boolean> {
   try {
     const res = await fetch(`http://${host}:${port}/`);
     if (res.status !== 200) return false;
+
     const text = await res.text();
+    const cleanText = text.trim().toLowerCase();
+
+    // Se a resposta for o texto puro "ok", o emulador está ativo
+    if (cleanText === 'ok') {
+      return true;
+    }
+
+    // Fallback caso algum outro serviço ou versão responda em JSON
     try {
       const json = JSON.parse(text);
       return json.status === 'ok';
