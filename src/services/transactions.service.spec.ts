@@ -15,6 +15,7 @@ const firestore = vi.hoisted(() => ({
   deleteDoc: vi.fn(async () => undefined),
   doc: vi.fn(() => ({ kind: 'document' })),
   getDocs: vi.fn(),
+  getDocsFromServer: vi.fn(),
   limit: vi.fn((size: number) => ({ kind: 'limit', size })),
   orderBy: vi.fn((field: string, direction: string) => ({ kind: 'orderBy', field, direction })),
   query: vi.fn((...clauses: unknown[]) => ({ clauses })),
@@ -40,10 +41,41 @@ describe('transactionsService', () => {
     vi.clearAllMocks();
     firestore.addDoc.mockResolvedValue({ id: 'new-id' });
     firestore.getDocs.mockResolvedValue({ docs: [] });
+    firestore.getDocsFromServer.mockResolvedValue({ docs: [] });
+  });
+
+  it('loads the main transaction list from the server', async () => {
+    await transactionsService.list('uid1');
+
+    expect(firestore.getDocsFromServer).toHaveBeenCalledOnce();
+    expect(firestore.getDocs).not.toHaveBeenCalled();
+  });
+
+  it('rejects the main transaction list when the server read remains pending', async () => {
+    vi.useFakeTimers();
+
+    try {
+      firestore.getDocsFromServer.mockReturnValueOnce(new Promise(() => undefined));
+      const outcome = Promise.race([
+        transactionsService.list('uid1').then(
+          () => 'resolved',
+          (error: unknown) => error
+        ),
+        new Promise((resolve) => setTimeout(() => resolve('still-pending'), 10_001)),
+      ]);
+
+      await vi.advanceTimersByTimeAsync(10_001);
+
+      await expect(outcome).resolves.toEqual(
+        expect.objectContaining({ message: 'Transaction list request timed out' })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('lists mapped transactions', async () => {
-    firestore.getDocs.mockResolvedValueOnce({ docs: [docs[0]] });
+    firestore.getDocsFromServer.mockResolvedValueOnce({ docs: [docs[0]] });
 
     const result = await transactionsService.list('uid1');
 
@@ -51,7 +83,7 @@ describe('transactionsService', () => {
   });
 
   it('does not expose descriptionNormalized when listing transactions', async () => {
-    firestore.getDocs.mockResolvedValueOnce({
+    firestore.getDocsFromServer.mockResolvedValueOnce({
       docs: [
         {
           id: 't1',
