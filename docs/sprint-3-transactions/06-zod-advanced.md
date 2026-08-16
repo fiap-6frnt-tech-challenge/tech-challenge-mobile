@@ -36,11 +36,11 @@ Mensagens em pt-BR. `attachmentSchema` valida `{ name, url, path, size, contentT
 
 ## Validação
 
-- [ ] Valor ≤0 rejeitado; categoria vazia rejeitada
-- [ ] Data futura rejeitada
-- [ ] Descrição <3 ou >140 rejeitada
-- [ ] >5 anexos rejeitado
-- [ ] Testes pos/neg/edge do schema
+- [x] Valor ≤0 rejeitado; categoria vazia rejeitada
+- [x] Data futura rejeitada
+- [x] Descrição <3 ou >140 rejeitada
+- [x] >5 anexos rejeitado
+- [x] Testes pos/neg/edge do schema (`src/domain/schema.test.ts`, 49 casos)
 
 ## Gotchas
 

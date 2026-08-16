@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { CATEGORIES } from './categories';
 import { TRANSACTION_TYPE } from './constants';
 
+export const MAX_TRANSACTION_AMOUNT = 1_000_000;
+export const MAX_TRANSACTION_ATTACHMENTS = 5;
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 const transactionTypes = [
   TRANSACTION_TYPE.DEPOSIT,
   TRANSACTION_TYPE.WITHDRAWAL,
@@ -14,6 +19,24 @@ const categoryIds = CATEGORIES.map((category) => category.id) as [
   ...(typeof CATEGORIES)[number]['id'][],
 ];
 
+function isCalendarDate(value: string): boolean {
+  if (!ISO_DATE_PATTERN.test(value)) return false;
+
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(year, month - 1, day);
+
+  return (
+    parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day
+  );
+}
+
+function todayISODate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 export const attachmentSchema = z.object({
   id: z.string().min(1, 'Anexo inválido'),
   url: z.string().url('URL inválida'),
@@ -24,17 +47,22 @@ export const attachmentSchema = z.object({
 });
 
 export const transactionFormSchema = z.object({
-  type: z.enum(transactionTypes, { message: 'Tipo inválido' }),
-  category: z.enum(categoryIds, { message: 'Categoria é obrigatória' }),
-  amount: z.number({ message: 'Informe um valor' }).positive('Valor deve ser positivo'),
+  type: z.enum(transactionTypes, { message: 'Selecione o tipo' }),
+  category: z.enum(categoryIds, { message: 'Selecione uma categoria' }),
+  amount: z
+    .number({ message: 'Informe um valor' })
+    .positive('Valor deve ser maior que zero')
+    .max(MAX_TRANSACTION_AMOUNT, 'Valor máximo é R$ 1.000.000,00'),
   date: z
     .string()
     .min(1, 'Data é obrigatória')
-    .refine((value) => !value || new Date(value) <= new Date(), {
-      message: 'Data não pode ser futura',
-    }),
-  description: z.string().min(3, 'Mínimo 3 caracteres').max(140, 'Máximo 140 caracteres'),
-  attachments: z.array(attachmentSchema).max(5, 'Máximo 5 anexos').optional(),
+    .refine(isCalendarDate, { message: 'Data inválida' })
+    .refine((value) => value <= todayISODate(), { message: 'Data não pode ser futura' }),
+  description: z.string().trim().min(3, 'Mínimo 3 caracteres').max(140, 'Máximo 140 caracteres'),
+  attachments: z
+    .array(attachmentSchema)
+    .max(MAX_TRANSACTION_ATTACHMENTS, 'Máximo 5 anexos')
+    .optional(),
 });
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
