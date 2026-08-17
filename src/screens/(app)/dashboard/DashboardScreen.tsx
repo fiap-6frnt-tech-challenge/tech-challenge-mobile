@@ -1,8 +1,19 @@
 import { ArrowDownLeft, ArrowUpRight, Lightbulb, Wallet } from 'lucide-react-native';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DashboardFeedback } from '@/src/components/features/dashboard/DashboardFeedback';
+import { DashboardSkeleton } from '@/src/components/features/dashboard/DashboardSkeleton';
+import { Button } from '@/src/components/ui/Button';
 import { Card } from '@/src/components/ui/Card';
 import { KpiCard } from '@/src/components/ui/KpiCard';
 import { SummaryTile } from '@/src/components/ui/SummaryTile';
@@ -19,6 +30,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { CATEGORIES, type CategoryId, type MonthlyAggregate } from '@/src/domain';
 import { useDashboardData } from '@/src/hooks/useDashboardData';
 import { spacing, useTheme, type Theme } from '@/src/theme';
+import { getDashboardViewState, runDashboardRefresh } from './dashboardState';
 
 const CHART_MAX_WIDTH = 640;
 const CONTENT_MAX_WIDTH = CHART_MAX_WIDTH + (spacing.lg + spacing.md) * 2;
@@ -53,21 +65,61 @@ function monthTrendLabel(current: number, previous: number): string {
 
 export default function DashboardScreen() {
   const { user } = useAuth();
-  const { totals, byMonth, byCategory, balanceOverTime, topCategory, refresh } = useDashboardData();
+  const {
+    totals,
+    byMonth,
+    byCategory,
+    balanceOverTime,
+    topCategory,
+    loading,
+    error,
+    refresh,
+    isEmpty,
+  } = useDashboardData();
+  const router = useRouter();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const sectionsRef = useRef<AnimatedSectionGroupHandle>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isEmptyErrorRetryPending, setIsEmptyErrorRetryPending] = useState(false);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
+  const dashboardViewState = getDashboardViewState({ loading, refreshing, error, isEmpty });
+  const viewState = isEmptyErrorRetryPending && isEmpty ? 'error' : dashboardViewState;
+  const inlineErrorAccessibilityLabel =
+    error && !isEmpty ? `${error}. Dados anteriores continuam visíveis.` : null;
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refresh();
-    } finally {
-      setRefreshing(false);
-      sectionsRef.current?.replay();
+  useEffect(() => {
+    if (Platform.OS === 'ios' && inlineErrorAccessibilityLabel) {
+      AccessibilityInfo.announceForAccessibility(inlineErrorAccessibilityLabel);
     }
-  }, [refresh]);
+  }, [inlineErrorAccessibilityLabel]);
+
+  const refreshDashboard = useCallback(() => {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
+
+    const shouldPreserveEmptyError = dashboardViewState === 'error';
+    if (shouldPreserveEmptyError) setIsEmptyErrorRetryPending(true);
+
+    const request = runDashboardRefresh({
+      refresh,
+      setRefreshing,
+      replay: () => sectionsRef.current?.replay(),
+    }).finally(() => {
+      if (refreshInFlightRef.current === request) {
+        refreshInFlightRef.current = null;
+        if (shouldPreserveEmptyError) setIsEmptyErrorRetryPending(false);
+      }
+    });
+
+    refreshInFlightRef.current = request;
+    return request;
+  }, [dashboardViewState, refresh]);
+
+  const handleRefresh = useCallback((): void => {
+    void refreshDashboard().catch(() => undefined);
+  }, [refreshDashboard]);
+
+  const handleErrorRetry = handleRefresh;
 
   const name = firstName(user?.displayName, user?.email);
   const currentMonth = byMonth.at(-1) ?? EMPTY_MONTH;
@@ -99,88 +151,116 @@ export default function DashboardScreen() {
               colors={[theme.colors.primary]}
             />
           }>
-          <AnimatedSection index={0} style={styles.section}>
-            <Text variant="h2" accessibilityRole="header">
-              {name ? `Olá, ${name}` : 'Olá'}
-            </Text>
-            <Text variant="caption" color="textSecondary">
-              Este é o resumo das suas finanças.
-            </Text>
-            <KpiCard
-              label="Saldo atual"
-              value={totals.balance}
-              tone="primary"
-              icon={Wallet}
-              trend={monthNet > 0 ? 'up' : monthNet < 0 ? 'down' : 'neutral'}
-              trendLabel={`${formatBRL(monthNet)} neste mês`}
-              style={styles.balanceCard}
-              testID="dashboard-balance"
-            />
-          </AnimatedSection>
+          {viewState === 'loading' ? <DashboardSkeleton /> : null}
 
-          <AnimatedSection index={1} style={styles.kpiRow}>
-            <SummaryTile
-              label="Entradas do mês"
-              value={currentMonth.income}
-              tone="positive"
-              icon={ArrowDownLeft}
-              trend={monthTrend(currentMonth.income, previousMonth.income)}
-              trendLabel={monthTrendLabel(currentMonth.income, previousMonth.income)}
-              testID="dashboard-income"
-            />
-            <SummaryTile
-              label="Saídas do mês"
-              value={currentMonth.expense}
-              tone="negative"
-              icon={ArrowUpRight}
-              trend={monthTrend(currentMonth.expense, previousMonth.expense)}
-              trendLabel={monthTrendLabel(currentMonth.expense, previousMonth.expense)}
-              testID="dashboard-expense"
-            />
-          </AnimatedSection>
+          {viewState === 'error' ? (
+            <DashboardFeedback variant="error" onAction={handleErrorRetry} />
+          ) : null}
 
-          <AnimatedSection index={2}>
-            <Card>
-              <ExpenseBarChart
-                data={byMonth}
-                title="Receita × Despesa"
-                testID="dashboard-bar-chart"
-              />
-            </Card>
-          </AnimatedSection>
+          {viewState === 'empty' ? (
+            <DashboardFeedback variant="empty" onAction={() => router.push('/transactionAdd')} />
+          ) : null}
 
-          <AnimatedSection index={3}>
-            <Card style={styles.sectionCard}>
-              <CategoryPieChart
-                data={byCategory}
-                title="Gastos por categoria"
-                testID="dashboard-pie-chart"
-              />
-              {insight ? (
-                <View style={styles.insight} accessible accessibilityRole="text">
-                  <Lightbulb size={16} color={theme.colors.primary} strokeWidth={2} />
-                  <Text variant="caption" color="textSecondary" style={styles.insightText}>
-                    Maior gasto do mês:{' '}
-                    <Text variant="caption" style={styles.insightHighlight}>
-                      {insight.label}
-                    </Text>{' '}
-                    com {insight.value}
-                    {insight.share !== null ? `, ${insight.share}% das saídas` : ''}.
-                  </Text>
+          {viewState === 'content' ? (
+            <>
+              {inlineErrorAccessibilityLabel ? (
+                <View style={styles.inlineError} testID="dashboard-refresh-error">
+                  <View
+                    testID="dashboard-refresh-error-announcement"
+                    accessible
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="assertive"
+                    accessibilityLabel={inlineErrorAccessibilityLabel}>
+                    <Text color="danger">{inlineErrorAccessibilityLabel}</Text>
+                  </View>
+                  <Button title="Tentar novamente" variant="secondary" onPress={handleRefresh} />
                 </View>
               ) : null}
-            </Card>
-          </AnimatedSection>
 
-          <AnimatedSection index={4}>
-            <Card>
-              <BalanceLineChart
-                data={balanceOverTime}
-                title="Evolução do saldo"
-                testID="dashboard-line-chart"
-              />
-            </Card>
-          </AnimatedSection>
+              <AnimatedSection index={0} style={styles.section}>
+                <Text variant="h2" accessibilityRole="header">
+                  {name ? `Olá, ${name}` : 'Olá'}
+                </Text>
+                <Text variant="caption" color="textSecondary">
+                  Este é o resumo das suas finanças.
+                </Text>
+                <KpiCard
+                  label="Saldo atual"
+                  value={totals.balance}
+                  tone="primary"
+                  icon={Wallet}
+                  trend={monthNet > 0 ? 'up' : monthNet < 0 ? 'down' : 'neutral'}
+                  trendLabel={`${formatBRL(monthNet)} neste mês`}
+                  style={styles.balanceCard}
+                  testID="dashboard-balance"
+                />
+              </AnimatedSection>
+
+              <AnimatedSection index={1} style={styles.kpiRow}>
+                <SummaryTile
+                  label="Entradas do mês"
+                  value={currentMonth.income}
+                  tone="positive"
+                  icon={ArrowDownLeft}
+                  trend={monthTrend(currentMonth.income, previousMonth.income)}
+                  trendLabel={monthTrendLabel(currentMonth.income, previousMonth.income)}
+                  testID="dashboard-income"
+                />
+                <SummaryTile
+                  label="Saídas do mês"
+                  value={currentMonth.expense}
+                  tone="negative"
+                  icon={ArrowUpRight}
+                  trend={monthTrend(currentMonth.expense, previousMonth.expense)}
+                  trendLabel={monthTrendLabel(currentMonth.expense, previousMonth.expense)}
+                  testID="dashboard-expense"
+                />
+              </AnimatedSection>
+
+              <AnimatedSection index={2}>
+                <Card>
+                  <ExpenseBarChart
+                    data={byMonth}
+                    title="Receita × Despesa"
+                    testID="dashboard-bar-chart"
+                  />
+                </Card>
+              </AnimatedSection>
+
+              <AnimatedSection index={3}>
+                <Card style={styles.sectionCard}>
+                  <CategoryPieChart
+                    data={byCategory}
+                    title="Gastos por categoria"
+                    testID="dashboard-pie-chart"
+                  />
+                  {insight ? (
+                    <View style={styles.insight} accessible accessibilityRole="text">
+                      <Lightbulb size={16} color={theme.colors.primary} strokeWidth={2} />
+                      <Text variant="caption" color="textSecondary" style={styles.insightText}>
+                        Maior gasto do mês:{' '}
+                        <Text variant="caption" style={styles.insightHighlight}>
+                          {insight.label}
+                        </Text>{' '}
+                        com {insight.value}
+                        {insight.share !== null ? `, ${insight.share}% das saídas` : ''}.
+                      </Text>
+                    </View>
+                  ) : null}
+                </Card>
+              </AnimatedSection>
+
+              <AnimatedSection index={4}>
+                <Card>
+                  <BalanceLineChart
+                    data={balanceOverTime}
+                    title="Evolução do saldo"
+                    testID="dashboard-line-chart"
+                  />
+                </Card>
+              </AnimatedSection>
+            </>
+          ) : null}
         </ScrollView>
       </AnimatedSectionGroup>
     </SafeAreaView>
@@ -210,6 +290,12 @@ function createStyles(theme: Theme) {
     kpiRow: {
       flexDirection: 'row',
       gap: theme.spacing.sm,
+    },
+    inlineError: {
+      gap: theme.spacing.sm,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.default,
+      backgroundColor: theme.colors.badgeWithdrawBg,
     },
     sectionCard: {
       gap: theme.spacing.md,

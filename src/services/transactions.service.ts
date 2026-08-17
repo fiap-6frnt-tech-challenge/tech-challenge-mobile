@@ -5,6 +5,7 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
+  getDocsFromServer,
   query,
   orderBy,
   serverTimestamp,
@@ -23,6 +24,27 @@ import {
 } from '../domain';
 
 const col = (uid: string) => collection(db, 'users', uid, 'transactions');
+const TRANSACTION_LIST_TIMEOUT_MS = 10_000;
+
+function withTransactionListTimeout<T>(request: Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(
+      () => reject(new Error('Transaction list request timed out')),
+      TRANSACTION_LIST_TIMEOUT_MS
+    );
+
+    request.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    );
+  });
+}
 
 const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction => {
   const { descriptionNormalized: _descriptionNormalized, ...data } = snapshot.data();
@@ -56,7 +78,9 @@ export interface TransactionPage {
 
 export const transactionsService = {
   async list(uid: string): Promise<Transaction[]> {
-    const snap = await getDocs(query(col(uid), orderBy('date', 'desc')));
+    const snap = await withTransactionListTimeout(
+      getDocsFromServer(query(col(uid), orderBy('date', 'desc')))
+    );
     return snap.docs.map((document) => mapTransaction(uid, document));
   },
   async listPaged(
