@@ -9,6 +9,7 @@
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
+    "test": "vitest run",
     "web": "expo start --web",
     "test:domain": "vitest run",
     "storybook": "cross-env EXPO_PUBLIC_STORYBOOK=true expo start",

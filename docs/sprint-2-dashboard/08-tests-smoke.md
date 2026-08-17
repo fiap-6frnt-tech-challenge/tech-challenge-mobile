@@ -1,4 +1,4 @@
-# Task 08 — Testes + smoke
+# Task 08 — Testes + smoke ✅
 
 | | |
 | --- | --- |
@@ -17,6 +17,22 @@
 - **Render dos gráficos:** montam sem crash com fixture (RNTL); KPIs mostram valor formatado
 - **Formatação BRL:** helper testado
 
+### Cobertura automatizada
+
+Os cenários da task ficam em:
+
+- `src/domain/aggregations.test.ts`
+- `src/hooks/useDashboardData.test.tsx`
+- `src/components/ui/charts/charts.test.tsx`
+- `src/components/ui/KpiCard.test.tsx`
+- `src/components/ui/currency.test.ts`
+
+Executar com:
+
+```bash
+npm test
+```
+
 ## Smoke (device)
 
 1. Login com usuário que tem transações → dashboard com gráficos corretos
@@ -28,6 +44,6 @@
 
 ## Validação
 
-- [ ] Testes verdes em CI
-- [ ] Smoke ✅ em device
-- [ ] Performance ok com ~100 transações (sem travar animação/scroll)
+- [X] Testes verdes em CI
+- [X] Smoke ✅ em device
+- [X] Performance ok com ~100 transações (sem travar animação/scroll)
