@@ -1,5 +1,6 @@
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Text } from 'react-native';
 
 import { ThemeProvider } from '@/src/theme';
 import { KpiCard } from './KpiCard';
@@ -12,7 +13,8 @@ vi.mock('react-native', () => ({
   View: 'View',
   Text: 'Text',
   Platform: {
-    select: <T,>(obj: { ios?: T; android?: T; default?: T }): T | undefined => obj.android || obj.default,
+    select: <T,>(obj: { ios?: T; android?: T; default?: T }): T | undefined =>
+      obj.android || obj.default,
   },
 }));
 
@@ -47,7 +49,7 @@ describe('KpiCard', () => {
     const card = tree.root.findByProps({ testID: 'kpi-card' });
     expect(card).toBeTruthy();
 
-    const textNodes = tree.root.findAllByType('Text');
+    const textNodes = tree.root.findAllByType(Text);
     const hasValue = textNodes.some((node) =>
       Array.isArray(node.props.children)
         ? node.props.children.join('').includes('R$ 1.234,56')

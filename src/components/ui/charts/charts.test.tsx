@@ -1,4 +1,5 @@
 import { createElement, type ReactElement } from 'react';
+import { Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,7 +17,8 @@ vi.mock('react-native', () => ({
   View: 'View',
   Text: 'Text',
   Platform: {
-    select: <T,>(obj: { ios?: T; android?: T; default?: T }): T | undefined => obj.android || obj.default,
+    select: <T,>(obj: { ios?: T; android?: T; default?: T }): T | undefined =>
+      obj.android || obj.default,
   },
   useWindowDimensions: () => ({ width: 375, height: 812 }),
 }));
@@ -79,7 +81,7 @@ describe('dashboard charts', () => {
 
     const textNode = tree.root.find(
       (node) =>
-        node.type === 'Text' &&
+        node.type === Text &&
         (Array.isArray(node.props.children)
           ? node.props.children.join('').includes('Alimentação')
           : String(node.props.children).includes('Alimentação'))
@@ -115,7 +117,7 @@ describe('dashboard charts', () => {
     const findText = (text: string) => {
       return tree.root.find(
         (node) =>
-          node.type === 'Text' &&
+          node.type === Text &&
           (Array.isArray(node.props.children)
             ? node.props.children.join('').includes(text)
             : String(node.props.children).includes(text))
