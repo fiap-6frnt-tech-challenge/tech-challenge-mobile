@@ -177,6 +177,38 @@ describe('useInfiniteTransactions', () => {
     });
   });
 
+  it('coalesces concurrent refresh calls into one request and shared completion', async () => {
+    const refreshPage = deferred<TransactionPage>();
+    serviceMocks.listPaged
+      .mockResolvedValueOnce(page([transaction('old')], cursorOne, true))
+      .mockReturnValueOnce(refreshPage.promise);
+    await mount();
+
+    let firstRefresh!: Promise<void>;
+    let secondRefresh!: Promise<void>;
+    act(() => {
+      firstRefresh = current().refresh();
+      secondRefresh = current().refresh();
+    });
+
+    expect(firstRefresh).toBe(secondRefresh);
+    expect(serviceMocks.listPaged).toHaveBeenCalledTimes(2);
+    expect(current().refreshing).toBe(true);
+
+    await act(async () => {
+      refreshPage.resolve(page([transaction('fresh')], null, false));
+      await Promise.all([firstRefresh, secondRefresh]);
+    });
+
+    expect(serviceMocks.listPaged).toHaveBeenCalledTimes(2);
+    expect(current()).toMatchObject({
+      items: [transaction('fresh')],
+      refreshing: false,
+      hasMore: false,
+      error: null,
+    });
+  });
+
   it('resets on a meaningful filter change and ignores the stale response', async () => {
     const stalePage = deferred<TransactionPage>();
     const currentPage = deferred<TransactionPage>();
@@ -256,6 +288,36 @@ describe('useInfiniteTransactions', () => {
       refreshing: false,
       hasMore: true,
       error: 'Falha ao carregar transações',
+    });
+  });
+
+  it('keeps pagination state after a failed loadMore and retries from the same cursor', async () => {
+    serviceMocks.listPaged
+      .mockResolvedValueOnce(page([transaction('one')], cursorOne, true))
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(page([transaction('two')], cursorTwo, false));
+    await mount();
+
+    await act(async () => current().loadMore());
+
+    expect(serviceMocks.listPaged).toHaveBeenNthCalledWith(2, 'user-1', {}, 20, cursorOne);
+    expect(current()).toMatchObject({
+      items: [transaction('one')],
+      loading: false,
+      refreshing: false,
+      hasMore: true,
+      error: 'Falha ao carregar transações',
+    });
+
+    await act(async () => current().loadMore());
+
+    expect(serviceMocks.listPaged).toHaveBeenNthCalledWith(3, 'user-1', {}, 20, cursorOne);
+    expect(current()).toMatchObject({
+      items: [transaction('one'), transaction('two')],
+      loading: false,
+      refreshing: false,
+      hasMore: false,
+      error: null,
     });
   });
 });
