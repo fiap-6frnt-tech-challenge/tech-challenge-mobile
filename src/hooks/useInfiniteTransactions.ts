@@ -1,5 +1,5 @@
 import type { QueryDocumentSnapshot } from 'firebase/firestore';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
 import type { Transaction } from '../domain';
@@ -52,7 +52,7 @@ export function useInfiniteTransactions(filter: TxFilter): UseInfiniteTransactio
   const activePromiseRef = useRef<Promise<void> | null>(null);
   const activeModeRef = useRef<LoadMode | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     filterRef.current = filter;
   }, [filter, filterKey]);
 
@@ -134,17 +134,16 @@ export function useInfiniteTransactions(filter: TxFilter): UseInfiniteTransactio
     [uid]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     requestGenerationRef.current += 1;
-    const effectGeneration = requestGenerationRef.current;
     activePromiseRef.current = null;
     activeModeRef.current = null;
     cursorRef.current = null;
     hasMoreRef.current = Boolean(uid);
 
-    void Promise.resolve().then(() => {
-      if (effectGeneration === requestGenerationRef.current) return runPage('initial');
-    });
+    // The initial request must own the transition before pagination can run.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void runPage('initial');
 
     return () => {
       requestGenerationRef.current += 1;

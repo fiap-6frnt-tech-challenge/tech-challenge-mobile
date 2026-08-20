@@ -203,6 +203,22 @@ describe('useInfiniteTransactions', () => {
     expect(current().hasMore).toBe(false);
   });
 
+  it('does not allow loadMore to append stale items during a filter transition', async () => {
+    serviceMocks.listPaged
+      .mockResolvedValueOnce(page([transaction('salary')], cursorOne, true))
+      .mockResolvedValueOnce(page([transaction('food')], null, false));
+    await mount(salaryFilter);
+
+    act(() => {
+      renderer?.update(<Probe filter={foodFilter} />);
+    });
+
+    await act(async () => current().loadMore());
+
+    expect(current().items.map(({ id }) => id)).toEqual(['food']);
+    expect(current().hasMore).toBe(false);
+  });
+
   it('does not reload for an equivalent category filter in another order', async () => {
     serviceMocks.listPaged.mockResolvedValue(page([], null, false));
     await mount({ categories: ['food', 'salary'] });
