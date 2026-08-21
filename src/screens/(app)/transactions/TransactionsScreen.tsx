@@ -1,127 +1,158 @@
-import { useMemo, useRef, useState } from 'react';
-import { FlatList, StyleSheet, View, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type ListRenderItem,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TransactionItem } from '@/src/components/features/TransactionItem';
-import { useTransactions } from '@/src/contexts/TransactionContext';
-import { useTheme, type Theme } from '@/src/theme';
-import { Card } from '@/src/components/ui/Card';
-import { Text } from '@/src/components/ui/Text';
+import { TransactionListFeedback } from '@/src/components/features/TransactionListFeedback';
+import { TransactionListSkeleton } from '@/src/components/features/TransactionListSkeleton';
 import { Button } from '@/src/components/ui/Button';
-import {
-  AnimatedSection,
-  AnimatedSectionGroup,
-  type AnimatedSectionGroupHandle,
-} from '@/src/components/ui/motion';
+import { Text } from '@/src/components/ui/Text';
+import type { Transaction } from '@/src/domain';
+import { useInfiniteTransactions } from '@/src/hooks/useInfiniteTransactions';
+import type { TxFilter } from '@/src/services/transactions.service';
+import { useTheme, type Theme } from '@/src/theme';
 
-const SkeletonItem = () => {
-  const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
-
-  return (
-    <Card style={styles.card}>
-      <View style={styles.leftSection}>
-        <View style={[styles.iconCircle, styles.skeletonColor]} />
-        <View style={styles.details}>
-          <View style={[styles.skeletonBadge, styles.skeletonColor]} />
-          <View style={[styles.skeletonDescription, styles.skeletonColor]} />
-          <View style={[styles.skeletonDate, styles.skeletonColor]} />
-        </View>
-      </View>
-      <View style={styles.rightSection}>
-        <View style={[styles.skeletonAmount, styles.skeletonColor]} />
-      </View>
-    </Card>
-  );
-};
+const keyExtractor = (transaction: Transaction) => transaction.id;
 
 export default function TransactionsScreen() {
-  const { items, loading, error, refresh } = useTransactions();
   const router = useRouter();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const groupRef = useRef<AnimatedSectionGroupHandle>(null);
-  const [fabPressed, setFabPressed] = useState(false);
 
-  const handleRefresh = async () => {
-    await refresh();
-    groupRef.current?.replay();
-  };
+  const [filter] = useState<TxFilter>({});
+  const [rowHeight, setRowHeight] = useState(0);
+  const { items, loading, refreshing, hasMore, error, loadMore, refresh } =
+    useInfiniteTransactions(filter);
 
-  const handlePress = (id: string) => {
-    router.push({ pathname: '/transactionDetails', params: { id } });
-  };
+  const firstFocusRef = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocusRef.current) {
+        firstFocusRef.current = false;
+        return;
+      }
+      void refresh();
+    }, [refresh])
+  );
 
-  const renderContent = () => {
-    if (loading) {
-      const skeletons = Array.from({ length: 15 }, (_, i) => ({ id: `skeleton-${i}` }));
-      return (
-        <FlatList
-          data={skeletons}
-          keyExtractor={(item) => item.id}
-          renderItem={() => <SkeletonItem />}
-          contentContainerStyle={styles.listContent}
-        />
-      );
-    }
+  const handlePress = useCallback(
+    (id: string) => router.push({ pathname: '/transactionDetails', params: { id } }),
+    [router]
+  );
 
-    if (error && items.length === 0) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText} color="danger">
-            {error}
-          </Text>
-          <Button title="Tentar novamente" onPress={handleRefresh} variant="secondary" />
-        </View>
-      );
-    }
+  const handleAdd = useCallback(() => router.push('/transactionAdd'), [router]);
 
-    if (!loading && items.length === 0) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.emptyText} color="textSecondary">
-            Nenhuma transação ainda
-          </Text>
-          <Button
-            title="Adicionar nova transação"
-            onPress={() => router.push('/transactionAdd')}
-            variant="primary"
-          />
-        </View>
-      );
-    }
+  const handleRefresh = useCallback(() => void refresh(), [refresh]);
 
-    return (
-      <AnimatedSectionGroup ref={groupRef}>
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.id}
-          refreshing={loading}
-          onRefresh={handleRefresh}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item, index }) => (
-            <AnimatedSection index={index}>
-              <TransactionItem transaction={item} onPress={handlePress} />
-            </AnimatedSection>
-          )}
-        />
-      </AnimatedSectionGroup>
-    );
-  };
+  const handleEndReached = useCallback(() => void loadMore(), [loadMore]);
+
+  const handleRetry = useCallback(
+    () => void (hasMore ? loadMore() : refresh()),
+    [hasMore, loadMore, refresh]
+  );
+
+  const handleFirstRowLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = Math.round(event.nativeEvent.layout.height);
+    setRowHeight((current) => (current === height ? current : height));
+  }, []);
+
+  const getItemLayout = useMemo(
+    () =>
+      rowHeight > 0
+        ? (_data: ArrayLike<Transaction> | null | undefined, index: number) => ({
+            length: rowHeight,
+            offset: rowHeight * index,
+            index,
+          })
+        : undefined,
+    [rowHeight]
+  );
+
+  const renderItem = useCallback<ListRenderItem<Transaction>>(
+    ({ item, index }) => (
+      <View onLayout={index === 0 ? handleFirstRowLayout : undefined}>
+        <TransactionItem transaction={item} onPress={handlePress} />
+      </View>
+    ),
+    [handleFirstRowLayout, handlePress]
+  );
+
+  const listEmpty = loading ? (
+    <TransactionListSkeleton />
+  ) : error ? (
+    <TransactionListFeedback variant="error" onAction={handleRefresh} />
+  ) : (
+    <TransactionListFeedback variant="empty" onAction={handleAdd} />
+  );
+
+  const listFooter =
+    items.length === 0 ? null : error ? (
+      <View style={styles.footerError} testID="transactions-footer-error">
+        <Text color="danger" accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+        <Button title="Tentar novamente" variant="secondary" onPress={handleRetry} />
+      </View>
+    ) : loading && hasMore ? (
+      <ActivityIndicator
+        testID="transactions-footer-spinner"
+        style={styles.footerSpinner}
+        color={theme.colors.primary}
+        accessibilityLabel="Carregando mais transações"
+      />
+    ) : !hasMore ? (
+      <Text
+        variant="caption"
+        color="textSecondary"
+        style={styles.footerEnd}
+        testID="transactions-footer-end">
+        Você chegou ao fim da lista
+      </Text>
+    ) : null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
-      {renderContent()}
+      <FlatList
+        data={items}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        getItemLayout={getItemLayout}
+        onEndReached={hasMore ? handleEndReached : undefined}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={listFooter}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
+        contentContainerStyle={[styles.listContent, items.length === 0 && styles.listContentEmpty]}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={9}
+        testID="transactions-list"
+      />
+
       <Pressable
-        onPress={() => router.push('/transactionAdd')}
-        onPressIn={() => setFabPressed(true)}
-        onPressOut={() => setFabPressed(false)}
+        onPress={handleAdd}
         accessibilityRole="button"
         accessibilityLabel="Adicionar nova transação"
         testID="transactions-fab"
-        style={[styles.fab, fabPressed && styles.fabPressed]}>
+        style={styles.fab}>
         <Plus size={28} color={theme.colors.textInverse} />
       </Pressable>
     </SafeAreaView>
@@ -136,23 +167,23 @@ function createStyles(theme: Theme) {
     },
     listContent: {
       padding: theme.spacing.md,
-      paddingBottom: theme.spacing.xl * 3, // Safe spacing for FAB
+      paddingBottom: theme.spacing.xl * 3,
     },
-    centerContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: theme.spacing.xl,
-      gap: theme.spacing.md,
+    listContentEmpty: {
+      flexGrow: 1,
     },
-    errorText: {
-      fontSize: 16,
+    footerSpinner: {
+      paddingVertical: theme.spacing.lg,
+    },
+    footerEnd: {
+      paddingVertical: theme.spacing.lg,
       textAlign: 'center',
-      fontWeight: '500',
     },
-    emptyText: {
-      fontSize: 16,
-      textAlign: 'center',
+    footerError: {
+      gap: theme.spacing.sm,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.default,
+      backgroundColor: theme.colors.badgeWithdrawBg,
     },
     fab: {
       position: 'absolute',
@@ -169,60 +200,6 @@ function createStyles(theme: Theme) {
       shadowOpacity: 0.3,
       shadowRadius: 4.65,
       elevation: 8,
-    },
-    fabPressed: {
-      opacity: 0.8,
-    },
-    // Styles shared with TransactionItem skeleton
-    card: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: theme.spacing.sm,
-      padding: theme.spacing.md,
-    },
-    leftSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    iconCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      marginRight: theme.spacing.sm,
-    },
-    details: {
-      flex: 1,
-      gap: theme.spacing.xs,
-    },
-    rightSection: {
-      alignItems: 'flex-end',
-      justifyContent: 'center',
-    },
-    skeletonColor: {
-      backgroundColor: theme.colors.border,
-      opacity: 0.4,
-    },
-    skeletonBadge: {
-      width: 60,
-      height: 16,
-      borderRadius: 4,
-    },
-    skeletonDescription: {
-      width: 120,
-      height: 18,
-      borderRadius: 4,
-    },
-    skeletonDate: {
-      width: 80,
-      height: 12,
-      borderRadius: 4,
-    },
-    skeletonAmount: {
-      width: 70,
-      height: 20,
-      borderRadius: 4,
     },
   });
 }

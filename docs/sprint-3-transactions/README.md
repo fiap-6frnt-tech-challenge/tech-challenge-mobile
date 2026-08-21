@@ -48,7 +48,7 @@ Para busca textual, o contrato e:
 | 04 | ⏳ | DS: `SearchInput`, `FilterSheet`, `Chip`, `AttachmentPicker` + stories | Dev 2 | 3 dias | ✅ | [04-ds-filters-picker.md](./04-ds-filters-picker.md) |
 | 05 | 🟢 | DS: `AttachmentList` + preview imagem/PDF + stories | Dev 2 | 1 dia | ✅ | [05-ds-attachment-list.md](./05-ds-attachment-list.md) |
 | 06 | 🟢 | Hook `useInfiniteTransactions` | Dev 3 | 1.5 dia | ⬅ 01, 02 | [07-hook-infinite.md](./07-hook-infinite.md) |
-| 07 | ⏳ | Tela lista com FlatList, footer e estados de paginação | Dev 3 | 1.5 dia | ⬅ 06 | [08-infinite-list-screen.md](./08-infinite-list-screen.md) |
+| 07 | 🟢 | Tela lista com FlatList, footer e estados de paginação | Dev 3 | 1.5 dia | ⬅ 06 | [08-infinite-list-screen.md](./08-infinite-list-screen.md) |
 | 08 | ⏳ | Integração de filtros e busca | Dev 3 | 1.5 dia | ⬅ 04, 06 | [09-filters-integration.md](./09-filters-integration.md) |
 | 09 | ⏳ | Integrar anexos ao Add/Edit existente | Dev 2 + Dev 3 | 1.5 dia | ⬅ 03, 04, 05 | [11-attachments-flow.md](./11-attachments-flow.md) |
 | 10 | ⏳ | Remover anexo: Storage + Firestore consistentes | Dev 1 + Dev 3 | 1 dia | ⬅ 03, 09 | [10-remove-attachment.md](./10-remove-attachment.md) |
