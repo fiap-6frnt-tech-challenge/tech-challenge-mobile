@@ -53,15 +53,15 @@ const dedupe = (arr: Transaction[]) => [...new Map(arr.map((t) => [t.id, t])).va
 
 ## Validação
 
-- [ ] Primeira carga traz a página 1
-- [ ] `loadMore` acumula sem duplicar (dedupe por id)
-- [ ] `hasMore=false` no fim para de buscar
-- [ ] Mudar `filter` reseta e recarrega do topo
-- [ ] `refresh` recomeça a lista
+- [x] Primeira carga traz a página 1
+- [x] `loadMore` acumula sem duplicar (dedupe por id)
+- [x] `hasMore=false` no fim para de buscar
+- [x] Mudar `filter` reseta e recarrega do topo
+- [x] `refresh` recomeça a lista
 
 ## Gotchas
 
-1. **Guardar `cursor` (DocumentSnapshot)** — não serializável; manter no state do hook.
+1. **Guardar `cursor` (DocumentSnapshot)** — não serializável; manter em uma ref do hook, não no state do React.
 2. **`JSON.stringify(filter)`** como dep evita loop por nova referência de objeto a cada render.
-3. **Race:** o `loading` guard evita disparos concorrentes do `onEndReached`.
+3. **Race:** refs bloqueiam chamadas duplicadas no mesmo frame e uma geração de request impede respostas antigas de sobrescrever filtros novos.
 4. Este hook é independente do `TransactionContext` (que serve o dashboard). Ao criar/editar no form, chamar `refresh()` deste hook.
