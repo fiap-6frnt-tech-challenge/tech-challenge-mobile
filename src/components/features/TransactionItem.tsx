@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useTheme, type Theme } from '@/src/theme';
 import { Card } from '@/src/components/ui/Card';
@@ -42,9 +42,13 @@ export interface TransactionItemProps {
   onPress: (id: string) => void;
 }
 
-export function TransactionItem({ transaction, onPress }: TransactionItemProps) {
+export const TransactionItem = memo(function TransactionItem({
+  transaction,
+  onPress,
+}: TransactionItemProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const [pressed, setPressed] = useState(false);
 
   const { id, type, category, amount, date, description } = transaction;
 
@@ -94,9 +98,11 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
   return (
     <Pressable
       onPress={() => onPress(id)}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityText}
-      style={({ pressed }) => [pressed && styles.pressed]}>
+      style={[pressed && styles.pressed]}>
       <Card style={styles.card}>
         <View style={styles.leftSection}>
           <View style={[styles.iconCircle, { backgroundColor: badgeColors.bg }]}>
@@ -126,7 +132,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
       </Card>
     </Pressable>
   );
-}
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
