@@ -1,5 +1,5 @@
-# Task 10 — Form Add/Edit + validação + sugestão
-
+# Task 10 — Form Add/Edit + validação + sugestão ✅
+ 
 | | |
 | --- | --- |
 | **Sprint** | [Sprint 3](./README.md) |
@@ -48,11 +48,11 @@ Campos: tipo (SegmentedControl), valor (`CurrencyInput`), categoria (`Select` co
 
 ## Validação
 
-- [ ] Criar transação persiste no Firestore e aparece na lista/dashboard
-- [ ] Editar prefila os campos e salva alterações
-- [ ] Validação bloqueia submit inválido com mensagens pt-BR
-- [ ] Digitar "Uber" preenche categoria "Transporte" (sobrescrevível)
-- [ ] Após salvar, `refresh` da lista e do dashboard reflete a mudança
+- [X] Criar transação persiste no Firestore e aparece na lista/dashboard
+- [X] Editar prefila os campos e salva alterações
+- [X] Validação bloqueia submit inválido com mensagens pt-BR
+- [X] Digitar "Uber" preenche categoria "Transporte" (sobrescrevível)
+- [X] Após salvar, `refresh` da lista e do dashboard reflete a mudança
 
 ## Gotchas
 

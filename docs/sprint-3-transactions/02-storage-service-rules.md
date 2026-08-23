@@ -1,4 +1,4 @@
-# Task 02 — `storage.service` + `storage.rules`
+# Task 02 — `storage.service` + `storage.rules` ✅
 
 | | |
 | --- | --- |
@@ -70,12 +70,12 @@ service firebase.storage {
 
 ## Validação
 
-- [ ] Upload de PNG/JPG (galeria/câmera) e PDF funciona **em device real**
-- [ ] Progresso reportado (0→100%)
-- [ ] `getDownloadURL` retorna URL exibível
-- [ ] Arquivo >5MB ou tipo inválido rejeitado (service **e** rules)
-- [ ] `delete` remove do bucket
-- [ ] Outro usuário não lê/escreve em `receipts/{uid alheio}`
+- [X] Upload de PNG/JPG (galeria/câmera) e PDF funciona **em device real**
+- [X] Progresso reportado (0→100%)
+- [X] `getDownloadURL` retorna URL exibível
+- [X] Arquivo >5MB ou tipo inválido rejeitado (service **e** rules)
+- [X] `delete` remove do bucket
+- [X] Outro usuário não lê/escreve em `receipts/{uid alheio}`
 
 ## Gotchas
 

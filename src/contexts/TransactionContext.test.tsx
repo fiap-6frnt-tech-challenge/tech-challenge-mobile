@@ -23,8 +23,16 @@ const transactionsServiceMocks = vi.hoisted(() => ({
   remove: vi.fn(),
 }));
 
+const storageServiceMocks = vi.hoisted(() => ({
+  deleteReceipt: vi.fn(),
+}));
+
 vi.mock('../services/transactions.service', () => ({
   transactionsService: transactionsServiceMocks,
+}));
+
+vi.mock('../services/storage.service', () => ({
+  storageService: storageServiceMocks,
 }));
 
 type TransactionsValue = ReturnType<typeof useTransactions>;
