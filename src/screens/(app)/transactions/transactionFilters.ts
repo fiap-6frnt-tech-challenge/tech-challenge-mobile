@@ -2,11 +2,7 @@ import { BADGE_LABEL_MAP, CATEGORIES, type CategoryId } from '@/src/domain';
 import type { TxFilter } from '@/src/services/transactions.service';
 
 export type StructuredTransactionFilter = Omit<TxFilter, 'search'>;
-export type TransactionFilterChipKey =
-  | 'type'
-  | 'dateFrom'
-  | 'dateTo'
-  | `category:${CategoryId}`;
+export type TransactionFilterChipKey = 'type' | 'dateFrom' | 'dateTo' | `category:${CategoryId}`;
 
 export interface ActiveTransactionFilterChip {
   key: TransactionFilterChipKey;
@@ -39,9 +35,7 @@ export function replaceStructuredTransactionFilters(
   return compactTransactionFilter({ ...structured, search: current.search });
 }
 
-export function toStructuredTransactionFilter(
-  filter: TxFilter
-): StructuredTransactionFilter {
+export function toStructuredTransactionFilter(filter: TxFilter): StructuredTransactionFilter {
   const { type, categories, dateFrom, dateTo } = compactTransactionFilter(filter);
   return compactTransactionFilter({ type, categories, dateFrom, dateTo });
 }
@@ -61,9 +55,7 @@ export function removeTransactionFilter(
   });
 }
 
-export function getActiveTransactionFilterChips(
-  filter: TxFilter
-): ActiveTransactionFilterChip[] {
+export function getActiveTransactionFilterChips(filter: TxFilter): ActiveTransactionFilterChip[] {
   const chips: ActiveTransactionFilterChip[] = [];
 
   if (filter.type) chips.push({ key: 'type', label: BADGE_LABEL_MAP[filter.type] });

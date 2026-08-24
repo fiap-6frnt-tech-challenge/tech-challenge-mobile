@@ -71,7 +71,7 @@ describe('transactionFilters', () => {
     const filter = {
       search: 'mercado',
       type: TRANSACTION_TYPE.WITHDRAWAL,
-      categories: ['food', 'transport'] as Array<'food' | 'transport'>,
+      categories: ['food', 'transport'] as ('food' | 'transport')[],
       dateFrom: '2026-08-01',
     };
 
