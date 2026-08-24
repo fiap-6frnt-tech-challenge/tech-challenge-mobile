@@ -247,6 +247,7 @@ describe('TransactionsScreen', () => {
 
     expect(queryByTestId(tree, 'transactions-skeleton')).toBeDefined();
     expect(queryByTestId(tree, 'transactions-empty')).toBeUndefined();
+    expect(findByTestId(tree, 'transactions-search').props.resultCount).toBeUndefined();
   });
 
   it('renderiza os itens carregados e abre o detalhe ao tocar', () => {
@@ -264,15 +265,30 @@ describe('TransactionsScreen', () => {
     });
   });
 
+  it('não fornece getItemLayout quando o cabeçalho de filtros varia de altura', () => {
+    hookValue = createHookValue({ items: [transaction('t1')] });
+    const tree = renderScreen();
+    const measuredRow = tree.root.findAll((node) => typeof node.props.onLayout === 'function')[0];
+
+    if (measuredRow) {
+      act(() => measuredRow.props.onLayout({ nativeEvent: { layout: { height: 64 } } }));
+    }
+
+    expect(list(tree).props.getItemLayout).toBeUndefined();
+  });
+
   it('carrega a próxima página ao chegar no fim e mostra o spinner no rodapé', () => {
     hookValue = createHookValue({ items: [transaction('t1')], hasMore: true });
     const tree = renderScreen();
+
+    expect(findByTestId(tree, 'transactions-search').props.resultCount).toBe(1);
 
     act(() => list(tree).props.onEndReached());
     expect(hookMocks.loadMore).toHaveBeenCalledTimes(1);
 
     updateHookValue({ loading: true });
     expect(queryByTestId(tree, 'transactions-footer-spinner')).toBeDefined();
+    expect(findByTestId(tree, 'transactions-search').props.resultCount).toBe(1);
   });
 
   it('para de buscar quando não há mais páginas', () => {
@@ -326,6 +342,7 @@ describe('TransactionsScreen', () => {
     const tree = renderScreen();
 
     expect(findByTestId(tree, 'transactions-error').props.variant).toBe('error');
+    expect(findByTestId(tree, 'transactions-search').props.resultCount).toBeUndefined();
 
     act(() => findByTestId(tree, 'transactions-error').props.onAction());
     expect(hookMocks.refresh).toHaveBeenCalledTimes(1);
@@ -386,6 +403,20 @@ describe('TransactionsScreen', () => {
     );
     expect(filterMocks.scrollToOffset).toHaveBeenCalledTimes(2);
     expect(filterMocks.scrollToOffset).toHaveBeenLastCalledWith({ offset: 0, animated: false });
+  });
+
+  it('usa singular no rótulo de um filtro ativo', () => {
+    const tree = renderScreen();
+    act(() => findByTestId(tree, 'transactions-filter-button').props.onPress());
+    act(() =>
+      findByTestId(tree, 'transactions-filter-sheet').props.onApply({
+        type: TRANSACTION_TYPE.WITHDRAWAL,
+      })
+    );
+
+    expect(findByTestId(tree, 'transactions-filter-button').props.accessibilityLabel).toBe(
+      'Abrir filtros, 1 ativo'
+    );
   });
 
   it('renderiza chips ativos e remove somente o filtro escolhido', () => {

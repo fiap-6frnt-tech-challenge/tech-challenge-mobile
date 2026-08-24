@@ -8,7 +8,6 @@ import {
   RefreshControl,
   StyleSheet,
   View,
-  type LayoutChangeEvent,
   type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,7 +45,6 @@ export default function TransactionsScreen() {
   const [filter, setFilter] = useState<TxFilter>({});
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [searchResetGeneration, setSearchResetGeneration] = useState(0);
-  const [rowHeight, setRowHeight] = useState(0);
   const { items, loading, refreshing, hasMore, error, loadMore, refresh } =
     useInfiniteTransactions(filter);
 
@@ -81,6 +79,13 @@ export default function TransactionsScreen() {
   const activeFilterChips = useMemo(() => getActiveTransactionFilterChips(filter), [filter]);
   const structuredFilter = useMemo(() => toStructuredTransactionFilter(filter), [filter]);
   const hasAppliedFilters = hasAnyTransactionFilter(filter);
+  const resultCount = items.length === 0 && (loading || error) ? undefined : items.length;
+  const filterButtonAccessibilityLabel =
+    activeFilterChips.length === 0
+      ? 'Abrir filtros'
+      : `Abrir filtros, ${activeFilterChips.length} ${
+          activeFilterChips.length === 1 ? 'ativo' : 'ativos'
+        }`;
 
   const resetListPosition = useCallback(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -116,30 +121,9 @@ export default function TransactionsScreen() {
     changeFilter(() => ({}));
   }, [changeFilter]);
 
-  const handleFirstRowLayout = useCallback((event: LayoutChangeEvent) => {
-    const height = Math.round(event.nativeEvent.layout.height);
-    setRowHeight((current) => (current === height ? current : height));
-  }, []);
-
-  const getItemLayout = useMemo(
-    () =>
-      rowHeight > 0
-        ? (_data: ArrayLike<Transaction> | null | undefined, index: number) => ({
-            length: rowHeight,
-            offset: rowHeight * index,
-            index,
-          })
-        : undefined,
-    [rowHeight]
-  );
-
   const renderItem = useCallback<ListRenderItem<Transaction>>(
-    ({ item, index }) => (
-      <View onLayout={index === 0 ? handleFirstRowLayout : undefined}>
-        <TransactionItem transaction={item} onPress={handlePress} />
-      </View>
-    ),
-    [handleFirstRowLayout, handlePress]
+    ({ item }) => <TransactionItem transaction={item} onPress={handlePress} />,
+    [handlePress]
   );
 
   const listEmpty = loading ? (
@@ -160,18 +144,14 @@ export default function TransactionsScreen() {
           defaultValue={filter.search ?? ''}
           onSearch={handleSearch}
           debounceMs={300}
-          resultCount={items.length}
+          resultCount={resultCount}
           style={styles.searchInput}
           testID="transactions-search"
         />
         <Pressable
           onPress={() => setFiltersVisible(true)}
           accessibilityRole="button"
-          accessibilityLabel={
-            activeFilterChips.length > 0
-              ? `Abrir filtros, ${activeFilterChips.length} ativos`
-              : 'Abrir filtros'
-          }
+          accessibilityLabel={filterButtonAccessibilityLabel}
           testID="transactions-filter-button"
           style={styles.filterButton}>
           <ListFilter size={22} color={theme.colors.primary} />
@@ -238,7 +218,6 @@ export default function TransactionsScreen() {
         data={items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        getItemLayout={getItemLayout}
         onEndReached={hasMore ? handleEndReached : undefined}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={listHeader}
