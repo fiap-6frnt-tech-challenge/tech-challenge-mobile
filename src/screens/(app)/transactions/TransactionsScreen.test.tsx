@@ -1,14 +1,27 @@
-import { act, createElement, useEffect, useSyncExternalStore, type ReactNode } from 'react';
+import {
+  act,
+  createElement,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import { create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TRANSACTION_TYPE, type Transaction } from '@/src/domain';
 import type { UseInfiniteTransactionsResult } from '@/src/hooks/useInfiniteTransactions';
+import type { TxFilter } from '@/src/services/transactions.service';
 import TransactionsScreen from './TransactionsScreen';
 
 const routerMocks = vi.hoisted(() => ({ push: vi.fn() }));
 const hookMocks = vi.hoisted(() => ({ loadMore: vi.fn(), refresh: vi.fn() }));
 const hookStore = vi.hoisted(() => ({ listeners: new Set<() => void>() }));
+const filterMocks = vi.hoisted(() => ({
+  current: {} as TxFilter,
+  scrollToOffset: vi.fn(),
+}));
 const focusMocks = vi.hoisted(() => ({
   callback: null as null | (() => void | (() => void)),
 }));
@@ -20,7 +33,6 @@ interface MockFlatListProps {
   ListHeaderComponent?: ReactNode;
   ListEmptyComponent?: ReactNode;
   ListFooterComponent?: ReactNode;
-  [prop: string]: unknown;
 }
 
 vi.mock('expo-router', () => ({
@@ -33,26 +45,34 @@ vi.mock('expo-router', () => ({
 
 vi.mock('react-native', () => ({
   ActivityIndicator: 'ActivityIndicator',
-  FlatList: ({
-    data,
-    renderItem,
-    keyExtractor,
-    ListHeaderComponent,
-    ListEmptyComponent,
-    ListFooterComponent,
-    ...props
-  }: MockFlatListProps) =>
-    createElement(
-      'FlatList',
-      props,
-      ListHeaderComponent,
-      data.length === 0
-        ? ListEmptyComponent
-        : data.map((item, index) =>
-            createElement('Cell', { key: keyExtractor(item) }, renderItem({ item, index }))
-          ),
-      ListFooterComponent
-    ),
+  FlatList: forwardRef<unknown, MockFlatListProps>(
+    (
+      {
+        data,
+        renderItem,
+        keyExtractor,
+        ListHeaderComponent,
+        ListEmptyComponent,
+        ListFooterComponent,
+        ...props
+      },
+      ref
+    ) => {
+      useImperativeHandle(ref, () => ({ scrollToOffset: filterMocks.scrollToOffset }));
+
+      return createElement(
+        'FlatList',
+        props,
+        ListHeaderComponent,
+        data.length === 0
+          ? ListEmptyComponent
+          : data.map((item, index) =>
+              createElement('Cell', { key: keyExtractor(item) }, renderItem({ item, index }))
+            ),
+        ListFooterComponent
+      );
+    }
+  ),
   Pressable: 'Pressable',
   RefreshControl: 'RefreshControl',
   StyleSheet: { create: <T,>(styles: T) => styles, hairlineWidth: 1 },
@@ -96,20 +116,37 @@ vi.mock('@/src/components/ui/Button', () => ({
     createElement('Button', { title, onPress }),
 }));
 
+vi.mock('@/src/components/ui/SearchInput', () => ({
+  SearchInput: (props: Record<string, unknown>) => createElement('SearchInput', props),
+}));
+
+vi.mock('@/src/components/ui/FilterSheet', () => ({
+  FilterSheet: (props: Record<string, unknown>) => createElement('FilterSheet', props),
+}));
+
+vi.mock('@/src/components/ui/Chip', () => ({
+  Chip: (props: Record<string, unknown>) => createElement('Chip', props),
+}));
+
 vi.mock('@/src/components/ui/Text', () => ({
   Text: ({ children, ...props }: { children?: ReactNode }) =>
     createElement('Text', props, children),
 }));
 
 vi.mock('@/src/hooks/useInfiniteTransactions', () => ({
-  useInfiniteTransactions: () =>
-    useSyncExternalStore(
+  useInfiniteTransactions: (filter: TxFilter) => {
+    useEffect(() => {
+      filterMocks.current = filter;
+    }, [filter]);
+
+    return useSyncExternalStore(
       (listener: () => void) => {
         hookStore.listeners.add(listener);
         return () => hookStore.listeners.delete(listener);
       },
       () => hookValue
-    ),
+    );
+  },
 }));
 
 vi.mock('@/src/theme', () => ({
@@ -191,6 +228,8 @@ beforeEach(() => {
   hookValue = createHookValue();
   hookStore.listeners.clear();
   focusMocks.callback = null;
+  filterMocks.current = {};
+  filterMocks.scrollToOffset.mockReset();
   vi.clearAllMocks();
 });
 
@@ -302,5 +341,90 @@ describe('TransactionsScreen', () => {
     });
 
     expect(hookMocks.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('aplica busca com debounce de 300 ms e anuncia os itens carregados', () => {
+    hookValue = createHookValue({ items: [transaction('t1'), transaction('t2')] });
+    const tree = renderScreen();
+    const search = findByTestId(tree, 'transactions-search');
+
+    expect(search.props.debounceMs).toBe(300);
+    expect(search.props.resultCount).toBe(2);
+
+    act(() => search.props.onSearch('  mercado  '));
+
+    expect(filterMocks.current).toEqual({ search: 'mercado' });
+    expect(filterMocks.scrollToOffset).toHaveBeenCalledWith({ offset: 0, animated: false });
+  });
+
+  it('aplica filtros estruturados preservando a busca ativa', () => {
+    const tree = renderScreen();
+    act(() => findByTestId(tree, 'transactions-search').props.onSearch('mercado'));
+    act(() => findByTestId(tree, 'transactions-filter-button').props.onPress());
+
+    const sheet = findByTestId(tree, 'transactions-filter-sheet');
+    expect(sheet.props.visible).toBe(true);
+
+    act(() =>
+      sheet.props.onApply({
+        type: TRANSACTION_TYPE.WITHDRAWAL,
+        categories: ['food', 'transport'],
+        dateFrom: '2026-08-01',
+        dateTo: '2026-08-31',
+      })
+    );
+
+    expect(filterMocks.current).toEqual({
+      search: 'mercado',
+      type: TRANSACTION_TYPE.WITHDRAWAL,
+      categories: ['food', 'transport'],
+      dateFrom: '2026-08-01',
+      dateTo: '2026-08-31',
+    });
+    expect(findByTestId(tree, 'transactions-filter-button').props.accessibilityLabel).toBe(
+      'Abrir filtros, 5 ativos'
+    );
+    expect(filterMocks.scrollToOffset).toHaveBeenCalledTimes(2);
+    expect(filterMocks.scrollToOffset).toHaveBeenLastCalledWith({ offset: 0, animated: false });
+  });
+
+  it('renderiza chips ativos e remove somente o filtro escolhido', () => {
+    const tree = renderScreen();
+    act(() => findByTestId(tree, 'transactions-filter-button').props.onPress());
+    act(() =>
+      findByTestId(tree, 'transactions-filter-sheet').props.onApply({
+        type: TRANSACTION_TYPE.WITHDRAWAL,
+        categories: ['food', 'transport'],
+        dateFrom: '2026-08-01',
+      })
+    );
+
+    expect(findByTestId(tree, 'transactions-filter-type').props.label).toBe('Saque');
+    expect(findByTestId(tree, 'transactions-filter-category:food').props.label).toBe('Alimentação');
+
+    act(() => findByTestId(tree, 'transactions-filter-category:food').props.onRemove());
+
+    expect(filterMocks.current).toEqual({
+      type: TRANSACTION_TYPE.WITHDRAWAL,
+      categories: ['transport'],
+      dateFrom: '2026-08-01',
+    });
+    expect(filterMocks.scrollToOffset).toHaveBeenCalledTimes(2);
+    expect(filterMocks.scrollToOffset).toHaveBeenLastCalledWith({ offset: 0, animated: false });
+  });
+
+  it('mostra nenhum resultado para filtro vazio e limpa todos os filtros', () => {
+    const tree = renderScreen();
+    act(() => findByTestId(tree, 'transactions-search').props.onSearch('inexistente'));
+
+    expect(findByTestId(tree, 'transactions-no-results').props.variant).toBe('no-results');
+
+    act(() => findByTestId(tree, 'transactions-no-results').props.onAction());
+
+    expect(filterMocks.current).toEqual({});
+    expect(findByTestId(tree, 'transactions-search').props.defaultValue).toBe('');
+    expect(findByTestId(tree, 'transactions-empty').props.variant).toBe('empty');
+    expect(filterMocks.scrollToOffset).toHaveBeenCalledTimes(2);
+    expect(filterMocks.scrollToOffset).toHaveBeenLastCalledWith({ offset: 0, animated: false });
   });
 });

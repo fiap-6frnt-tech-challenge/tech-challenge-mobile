@@ -1,4 +1,4 @@
-import { ScrollText, TriangleAlert } from 'lucide-react-native';
+import { ScrollText, SearchX, TriangleAlert } from 'lucide-react-native';
 import { useEffect, useMemo } from 'react';
 import { AccessibilityInfo, Platform, StyleSheet, View } from 'react-native';
 
@@ -6,7 +6,7 @@ import { Button } from '@/src/components/ui/Button';
 import { Text } from '@/src/components/ui/Text';
 import { useTheme, type Theme } from '@/src/theme';
 
-export type TransactionListFeedbackVariant = 'empty' | 'error';
+export type TransactionListFeedbackVariant = 'empty' | 'error' | 'no-results';
 
 export interface TransactionListFeedbackProps {
   variant: TransactionListFeedbackVariant;
@@ -28,6 +28,14 @@ const feedback = {
     message: 'Verifique sua conexão e tente novamente.',
     action: 'Tentar novamente',
     accessibilityLabel: 'Erro ao carregar as transações. Verifique sua conexão e tente novamente.',
+  },
+  'no-results': {
+    icon: SearchX,
+    title: 'Nenhuma transação encontrada',
+    message: 'Ajuste a busca ou limpe os filtros para tentar novamente.',
+    action: 'Limpar filtros',
+    accessibilityLabel:
+      'Nenhuma transação encontrada. Ajuste a busca ou limpe os filtros para tentar novamente.',
   },
 } as const;
 
