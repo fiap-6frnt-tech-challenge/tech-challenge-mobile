@@ -2,6 +2,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useReduce
 import { Transaction } from '../domain';
 import { transactionsService } from '../services/transactions.service';
 import { useAuth } from './AuthContext';
+import { storageService } from '../services/storage.service';
 
 interface TransactionState {
   items: Transaction[];
@@ -13,6 +14,7 @@ interface TransactionsContext extends TransactionState {
   create: (data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) => Promise<void>;
   update: (id: string, patch: Partial<Transaction>) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  removeAttachment: (txId: string, attachmentId: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -90,6 +92,27 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const removeAttachment = async (id: string, attachmentId: string) => {
+    if (!user) throw new Error('Usuário não autenticado');
+    const transaction = state.items.find((item) => item.id === id);
+    if (!transaction) throw new Error('Transação não encontrada');
+    const attachment = transaction.attachments?.find((item) => item.id === attachmentId);
+    if (!attachment) throw new Error('Anexo não encontrado');
+    const remainingAttachments = transaction.attachments?.filter(
+      (item) => item.id !== attachmentId
+    );
+    try {
+      await storageService.deleteReceipt(attachment.path);
+      await transactionsService.update(user.uid, id, {
+        attachments: remainingAttachments,
+      });
+      await refresh();
+    } catch (e) {
+      dispatch({ type: 'ERROR', error: 'Falha ao remover anexo' });
+      throw e;
+    }
+  };
+
   useEffect(() => {
     refresh();
   }, [user, refresh]);
@@ -99,6 +122,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     create,
     update,
     remove,
+    removeAttachment,
     refresh,
   };
 

@@ -1,4 +1,4 @@
-# Task 10 — Remover Anexo com Consistência
+# Task 10 — Remover Anexo com Consistência ✅
 
 ## Contexto
 
@@ -17,11 +17,11 @@ Ao remover um recibo, o app precisa apagar o arquivo do Firebase Storage e atual
 
 ## Validação
 
-- [ ] Remover anexo apaga arquivo do Storage
-- [ ] Firestore deixa de listar o anexo
-- [ ] UI atualiza sem reload completo
-- [ ] Erro de permissão aparece de forma compreensível
-- [ ] Usuário não consegue remover anexo de outro usuário
+- [X] Remover anexo apaga arquivo do Storage
+- [X] Firestore deixa de listar o anexo
+- [X] UI atualiza sem reload completo
+- [X] Erro de permissão aparece de forma compreensível
+- [X] Usuário não consegue remover anexo de outro usuário
 
 ## Gotchas
 
