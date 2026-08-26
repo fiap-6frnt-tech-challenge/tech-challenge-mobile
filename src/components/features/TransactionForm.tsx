@@ -103,16 +103,14 @@ export function TransactionForm({
 
   const storedAttachments = useMemo<Attachment[]>(
     () =>
-      (attachments ?? [])
-        .filter(isStored)
-        .map(({ id, name, size, mimeType, url, path }) => ({
-          id,
-          name,
-          size,
-          mimeType,
-          url,
-          path,
-        })),
+      (attachments ?? []).filter(isStored).map(({ id, name, size, mimeType, url, path }) => ({
+        id,
+        name,
+        size,
+        mimeType,
+        url,
+        path,
+      })),
     [attachments]
   );
 
