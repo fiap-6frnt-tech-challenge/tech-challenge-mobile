@@ -66,7 +66,6 @@ function renderProvider(): void {
 
 const unsubscribe = vi.fn();
 
-/** Drives the Firestore listener the provider installs, so tests can emit at will. */
 function mockSubscription() {
   let emitItems: (items: Transaction[]) => void = () => undefined;
   let emitError: (error: unknown) => void = () => undefined;
@@ -288,7 +287,6 @@ describe('TransactionProvider integration', () => {
       category: 'housing',
       date: '2026-08-12',
     });
-    // The write must not trigger another full read — that is the listener's job.
     expect(transactionsServiceMocks.subscribe).toHaveBeenCalledOnce();
 
     subscription.items([

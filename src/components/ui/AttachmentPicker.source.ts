@@ -37,7 +37,6 @@ function extensionFor(asset: ImagePickerAsset): string {
   return fromUri && fromUri.length <= 5 ? fromUri : 'jpg';
 }
 
-/** `recibo-20260825-134500.jpg` — readable in the list and sortable in Storage. */
 function receiptName(extension: string): string {
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -46,11 +45,6 @@ function receiptName(extension: string): string {
   return `recibo-${date}-${time}.${extension}`;
 }
 
-/**
- * Android's photo picker reports the MediaStore row id as the display name
- * (`34.jpg`), which tells the user nothing. Treat a stem without letters as
- * missing so it falls back to a generated name.
- */
 function isDescriptiveName(name: string | null | undefined): name is string {
   if (!name) return false;
   return /[a-z]/i.test(name.replace(/\.[^.]+$/, ''));
@@ -59,8 +53,6 @@ function isDescriptiveName(name: string | null | undefined): name is string {
 function fromImageAsset(asset: ImagePickerAsset, origin: 'camera' | 'library'): PickedAttachment {
   return {
     uri: asset.uri,
-    // A camera capture has no original filename — expo-image-picker names the cache
-    // file after a UUID — so always generate one rather than surfacing that.
     name:
       origin === 'library' && isDescriptiveName(asset.fileName)
         ? asset.fileName
