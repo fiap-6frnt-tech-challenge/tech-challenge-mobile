@@ -1,6 +1,5 @@
 import { MAX_TRANSACTION_ATTACHMENTS } from './schema';
 
-/** Storage rules reject anything bigger; keep both sides in sync. */
 export const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024;
 
 export const ALLOWED_ATTACHMENT_MIME_TYPES = [
@@ -16,7 +15,6 @@ export const ATTACHMENT_LIMIT_ERROR = `Máximo de ${MAX_TRANSACTION_ATTACHMENTS}
 
 export interface AttachmentCandidate {
   mimeType: string;
-  /** Pickers do not always report a size; the upload re-checks the blob. */
   size?: number;
 }
 
@@ -28,7 +26,6 @@ export function isAllowedAttachmentSize(size: number): boolean {
   return size <= MAX_ATTACHMENT_SIZE_BYTES;
 }
 
-/** Returns the message to show the user, or `null` when the file can be uploaded. */
 export function validateAttachmentCandidate(
   candidate: AttachmentCandidate,
   currentCount: number

@@ -80,7 +80,6 @@ async function addPick(overrides: Partial<PickedAttachment> = {}): Promise<void>
   });
 }
 
-/** Runs `action` inside `act` and hands back whatever it rejected with. */
 async function rejection(action: () => Promise<unknown>): Promise<unknown> {
   let caught: unknown;
   await act(async () => {

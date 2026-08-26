@@ -49,7 +49,6 @@ function draftToItem(draft: AttachmentDraft): AttachmentItem {
     uri: draft.uri,
     url: draft.url,
     path: draft.path,
-    // `pending` has no counterpart in the list: it renders like any settled row.
     status: draft.status === 'pending' ? undefined : draft.status,
     progress: draft.progress,
     errorMessage: draft.errorMessage,
@@ -57,30 +56,21 @@ function draftToItem(draft: AttachmentDraft): AttachmentItem {
 }
 
 export interface UseAttachmentsOptions {
-  /** Owner of `receipts/{uid}/{txId}/...`. */
   uid?: string | null;
-  /** Existing transaction: picks upload right away. Omit for a transaction still being created. */
   txId?: string;
-  /** Attachments already stored on the transaction document. */
   persisted?: Attachment[];
-  /** Writes the whole attachment array back to Firestore. */
   onPersist?: (txId: string, attachments: Attachment[]) => Promise<void>;
-  /** Deletes one stored attachment from Storage *and* Firestore. */
   onRemovePersisted?: (attachment: Attachment) => Promise<void>;
 }
 
 export interface UseAttachmentsResult {
-  /** Persisted attachments plus in-flight drafts, ready for `AttachmentList`. */
   items: AttachmentItem[];
   error: string | null;
-  /** An upload or a removal is running. */
   busy: boolean;
   canAdd: boolean;
-  /** Files waiting for a transaction id. */
   pendingCount: number;
   add: (picked: PickedAttachment) => Promise<void>;
   remove: (item: AttachmentItem) => Promise<void>;
-  /** Uploads everything queued under `txId` and persists it. Rejects if anything fails. */
   commit: (txId: string) => Promise<void>;
   setError: (message: string | null) => void;
 }
@@ -121,12 +111,10 @@ export function useAttachments({
 
     return [
       ...persistedList.map(toItem),
-      // A committed draft lingers until the transaction reload lists it as persisted.
       ...drafts.filter((draft) => !persistedIds.has(draft.id)).map(draftToItem),
     ];
   }, [drafts, persistedList]);
 
-  /** Best-effort: keeps Storage clean when the Firestore write never lands. */
   const discardUploads = useCallback(async (paths: string[]) => {
     await Promise.all(
       paths.map((path) => storageService.deleteReceipt(path).catch(() => undefined))
@@ -206,8 +194,6 @@ export function useAttachments({
 
       updateDrafts((current) => [...current, draft]);
 
-      // No transaction id yet: the file waits for `commit` so a cancelled form
-      // never leaves an orphan in Storage.
       if (!txId) return;
 
       let uploaded: Attachment | undefined;
@@ -257,7 +243,6 @@ export function useAttachments({
       const uploaded: Attachment[] = [];
 
       try {
-        // Sequential: one progress bar moves at a time and only one blob is held in memory.
         for (const draft of queued) {
           uploaded.push(await uploadDraft(targetTxId, draft));
         }
@@ -304,7 +289,6 @@ export function useAttachments({
 
       if (!stored) {
         updateDrafts((current) => current.filter((entry) => entry.id !== item.id));
-        // Uploaded moments ago but not reloaded yet — drop the file too.
         if (draft?.path) await discardUploads([draft.path]);
         return;
       }
