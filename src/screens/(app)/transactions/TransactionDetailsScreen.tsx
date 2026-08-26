@@ -6,20 +6,34 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TransactionForm } from '@/src/components/features/TransactionForm';
 import { Button } from '@/src/components/ui/Button';
 import { Text } from '@/src/components/ui/Text';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { useTransactions } from '@/src/contexts/TransactionContext';
 import type { TransactionFormValues } from '@/src/domain';
+import { useAttachments } from '@/src/hooks/useAttachments';
 import { useTheme, type Theme } from '@/src/theme';
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { items, loading, update, remove } = useTransactions();
+  const { user } = useAuth();
+  const { items, loading, error, refresh, update, remove, removeAttachment } = useTransactions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const transaction = items.find((item) => item.id === id);
+
+  const attachments = useAttachments({
+    uid: user?.uid,
+    txId: transaction?.id,
+    persisted: transaction?.attachments,
+    onPersist: (txId, list) => update(txId, { attachments: list }),
+    onRemovePersisted: async (attachment) => {
+      if (!transaction) return;
+      await removeAttachment(transaction.id, attachment.id);
+    },
+  });
 
   const goBackToList = () => {
     if (router.canGoBack()) router.back();
@@ -64,6 +78,14 @@ export default function TransactionDetailsScreen() {
         <View style={styles.centerContainer}>
           {loading || deleting ? (
             <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando" />
+          ) : error ? (
+            <>
+              <Text color="textSecondary" style={styles.emptyText}>
+                Não foi possível carregar a transação.
+              </Text>
+              <Button title="Tentar novamente" onPress={() => refresh()} />
+              <Button title="Voltar para a lista" onPress={goBackToList} variant="secondary" />
+            </>
           ) : (
             <>
               <Text color="textSecondary" style={styles.emptyText}>
@@ -90,6 +112,13 @@ export default function TransactionDetailsScreen() {
         }}
         submitLabel="Salvar alterações"
         onSubmit={handleSubmit}
+        attachments={attachments.items}
+        onPickAttachment={attachments.add}
+        onRemoveAttachment={attachments.remove}
+        onAttachmentError={attachments.setError}
+        attachmentError={attachments.error}
+        canAddAttachment={attachments.canAdd}
+        attachmentsBusy={attachments.busy}
         footer={
           <View style={styles.footer}>
             <Button

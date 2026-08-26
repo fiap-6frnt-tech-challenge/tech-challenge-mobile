@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AttachmentList, type AttachmentItem } from '@/src/components/ui/AttachmentList';
+import { AttachmentPicker, type PickedAttachment } from '@/src/components/ui/AttachmentPicker';
 import { Button } from '@/src/components/ui/Button';
 import { Chip } from '@/src/components/ui/Chip';
 import { CurrencyInput } from '@/src/components/ui/CurrencyInput';
@@ -13,15 +15,22 @@ import { Text } from '@/src/components/ui/Text';
 import { TextField } from '@/src/components/ui/TextField';
 import {
   CATEGORIES,
+  MAX_TRANSACTION_ATTACHMENTS,
   TRANSACTION_TYPE,
   TRANSACTION_TYPE_OPTIONS,
   suggestCategory,
   transactionFormSchema,
+  type Attachment,
   type TransactionFormValues,
 } from '@/src/domain';
 import { useTheme, type Theme } from '@/src/theme';
 
 const CATEGORY_OPTIONS = CATEGORIES.map(({ id, label }) => ({ value: id, label }));
+const ATTACHMENT_HINT = `Até ${MAX_TRANSACTION_ATTACHMENTS} arquivos JPG, PNG, WEBP ou PDF de até 5 MB.`;
+
+function isStored(item: AttachmentItem): item is AttachmentItem & Pick<Attachment, 'url' | 'path'> {
+  return Boolean(item.url && item.path);
+}
 
 function todayISO(): string {
   const now = new Date();
@@ -35,6 +44,13 @@ export interface TransactionFormProps {
   submitLabel?: string;
   onSubmit: (values: TransactionFormValues) => Promise<void>;
   footer?: ReactNode;
+  attachments?: AttachmentItem[];
+  onPickAttachment?: (picked: PickedAttachment) => void;
+  onRemoveAttachment?: (item: AttachmentItem) => void;
+  onAttachmentError?: (message: string) => void;
+  attachmentError?: string | null;
+  canAddAttachment?: boolean;
+  attachmentsBusy?: boolean;
   testID?: string;
 }
 
@@ -43,6 +59,13 @@ export function TransactionForm({
   submitLabel = 'Salvar',
   onSubmit,
   footer,
+  attachments,
+  onPickAttachment,
+  onRemoveAttachment,
+  onAttachmentError,
+  attachmentError,
+  canAddAttachment = true,
+  attachmentsBusy = false,
   testID = 'transaction-form',
 }: TransactionFormProps) {
   const theme = useTheme();
@@ -54,7 +77,7 @@ export function TransactionForm({
     control,
     handleSubmit,
     setValue,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: {
@@ -77,6 +100,18 @@ export function TransactionForm({
   }, [categoryTouched, suggestion, category, setValue]);
 
   const showSuggestion = !categoryTouched && suggestion !== null && category === suggestion;
+
+  const storedAttachments = useMemo<Attachment[]>(
+    () =>
+      (attachments ?? [])
+        .filter(isStored)
+        .map(({ id, name, size, mimeType, url, path }) => ({ id, name, size, mimeType, url, path })),
+    [attachments]
+  );
+
+  useEffect(() => {
+    setValue('attachments', storedAttachments, { shouldValidate: true });
+  }, [setValue, storedAttachments]);
 
   const submit = handleSubmit(async (values) => {
     setFormError(null);
@@ -203,6 +238,42 @@ export function TransactionForm({
           )}
         />
 
+        {onPickAttachment ? (
+          <View style={styles.attachments}>
+            <Text style={styles.label}>Anexos</Text>
+
+            <AttachmentList
+              attachments={attachments ?? []}
+              onRemove={onRemoveAttachment}
+              readonly={isSubmitting}
+              testID={`${testID}-attachments`}
+            />
+
+            <AttachmentPicker
+              onPick={onPickAttachment}
+              onError={onAttachmentError}
+              disabled={isSubmitting || attachmentsBusy || !canAddAttachment}
+              label={canAddAttachment ? 'Adicionar anexo' : 'Limite de anexos atingido'}
+              testID={`${testID}-attachment-picker`}
+            />
+
+            {attachmentError || errors.attachments ? (
+              <Text
+                variant="caption"
+                color="danger"
+                accessibilityLiveRegion="polite"
+                accessibilityRole="alert"
+                testID={`${testID}-attachment-error`}>
+                {attachmentError ?? errors.attachments?.message}
+              </Text>
+            ) : (
+              <Text variant="caption" color="textSecondary">
+                {ATTACHMENT_HINT}
+              </Text>
+            )}
+          </View>
+        ) : null}
+
         {formError ? (
           <Text
             style={styles.error}
@@ -218,6 +289,7 @@ export function TransactionForm({
           title={submitLabel}
           onPress={submit}
           loading={isSubmitting}
+          disabled={attachmentsBusy}
           style={styles.submit}
           testID={`${testID}-submit`}
         />
@@ -242,6 +314,7 @@ function createStyles(theme: Theme) {
       fontWeight: '600',
     },
     suggestion: { marginTop: theme.spacing.sm },
+    attachments: { gap: theme.spacing.sm },
     error: { marginTop: theme.spacing.xs, color: theme.colors.danger },
     submit: { marginTop: theme.spacing.xs },
   });

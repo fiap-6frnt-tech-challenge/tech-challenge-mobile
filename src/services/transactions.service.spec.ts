@@ -15,8 +15,8 @@ const firestore = vi.hoisted(() => ({
   deleteDoc: vi.fn(async () => undefined),
   doc: vi.fn(() => ({ kind: 'document' })),
   getDocs: vi.fn(),
-  getDocsFromServer: vi.fn(),
   limit: vi.fn((size: number) => ({ kind: 'limit', size })),
+  onSnapshot: vi.fn(),
   orderBy: vi.fn((field: string, direction: string) => ({ kind: 'orderBy', field, direction })),
   query: vi.fn((...clauses: unknown[]) => ({ clauses })),
   serverTimestamp: vi.fn(() => 'SERVER_TS'),
@@ -41,49 +41,46 @@ describe('transactionsService', () => {
     vi.clearAllMocks();
     firestore.addDoc.mockResolvedValue({ id: 'new-id' });
     firestore.getDocs.mockResolvedValue({ docs: [] });
-    firestore.getDocsFromServer.mockResolvedValue({ docs: [] });
+    firestore.onSnapshot.mockReturnValue(() => undefined);
   });
 
-  it('loads the main transaction list from the server', async () => {
-    await transactionsService.list('uid1');
+  function emitSnapshot(snapshot: { docs: unknown[] }) {
+    firestore.onSnapshot.mock.calls[0][1](snapshot);
+  }
 
-    expect(firestore.getDocsFromServer).toHaveBeenCalledOnce();
+  it('subscribes to the collection ordered by date and hands back the unsubscribe', () => {
+    const stop = vi.fn();
+    firestore.onSnapshot.mockReturnValue(stop);
+
+    const result = transactionsService.subscribe('uid1', vi.fn(), vi.fn());
+
+    expect(firestore.orderBy).toHaveBeenCalledWith('date', 'desc');
+    expect(firestore.onSnapshot).toHaveBeenCalledOnce();
+    expect(result).toBe(stop);
+  });
+
+  it('does not read through a one-shot request when subscribing', () => {
+    transactionsService.subscribe('uid1', vi.fn(), vi.fn());
+
     expect(firestore.getDocs).not.toHaveBeenCalled();
   });
 
-  it('rejects the main transaction list when the server read remains pending', async () => {
-    vi.useFakeTimers();
+  it('maps the documents each snapshot delivers', () => {
+    const onItems = vi.fn();
+    transactionsService.subscribe('uid1', onItems, vi.fn());
 
-    try {
-      firestore.getDocsFromServer.mockReturnValueOnce(new Promise(() => undefined));
-      const outcome = Promise.race([
-        transactionsService.list('uid1').then(
-          () => 'resolved',
-          (error: unknown) => error
-        ),
-        new Promise((resolve) => setTimeout(() => resolve('still-pending'), 10_001)),
-      ]);
+    emitSnapshot({ docs: [docs[0]] });
 
-      await vi.advanceTimersByTimeAsync(10_001);
-
-      await expect(outcome).resolves.toEqual(
-        expect.objectContaining({ message: 'Transaction list request timed out' })
-      );
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(onItems).toHaveBeenCalledWith([
+      { id: 't1', userId: 'uid1', date: '2026-08-03', amount: 20 },
+    ]);
   });
 
-  it('lists mapped transactions', async () => {
-    firestore.getDocsFromServer.mockResolvedValueOnce({ docs: [docs[0]] });
+  it('does not expose descriptionNormalized through the subscription', () => {
+    const onItems = vi.fn();
+    transactionsService.subscribe('uid1', onItems, vi.fn());
 
-    const result = await transactionsService.list('uid1');
-
-    expect(result).toEqual([{ id: 't1', userId: 'uid1', date: '2026-08-03', amount: 20 }]);
-  });
-
-  it('does not expose descriptionNormalized when listing transactions', async () => {
-    firestore.getDocsFromServer.mockResolvedValueOnce({
+    emitSnapshot({
       docs: [
         {
           id: 't1',
@@ -96,9 +93,19 @@ describe('transactionsService', () => {
       ],
     });
 
-    await expect(transactionsService.list('uid1')).resolves.toEqual([
+    expect(onItems).toHaveBeenCalledWith([
       { id: 't1', userId: 'uid1', date: '2026-08-03', description: 'Caf\u00e9' },
     ]);
+  });
+
+  it('forwards a subscription failure to the error handler', () => {
+    const onError = vi.fn();
+    const failure = new Error('permission-denied');
+    transactionsService.subscribe('uid1', vi.fn(), onError);
+
+    firestore.onSnapshot.mock.calls[0][2](failure);
+
+    expect(onError).toHaveBeenCalledWith(failure);
   });
 
   it('creates a transaction and returns its id', async () => {

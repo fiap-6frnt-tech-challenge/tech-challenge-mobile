@@ -1,8 +1,11 @@
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
-
-const MAX = 5 * 1024 * 1024;
-const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+import {
+  ATTACHMENT_SIZE_ERROR,
+  ATTACHMENT_TYPE_ERROR,
+  isAllowedAttachmentSize,
+  isAllowedAttachmentType,
+} from '../domain';
 
 export const storageService = {
   async uploadReceipt(
@@ -13,11 +16,11 @@ export const storageService = {
     contentType: string,
     onProgress?: (pct: number) => void
   ) {
-    if (!ALLOWED.includes(contentType)) throw new Error('Tipo não permitido');
+    if (!isAllowedAttachmentType(contentType)) throw new Error(ATTACHMENT_TYPE_ERROR);
 
     const res = await fetch(localUri);
     const blob = await res.blob();
-    if (blob.size > MAX) throw new Error('Arquivo excede 5MB');
+    if (!isAllowedAttachmentSize(blob.size)) throw new Error(ATTACHMENT_SIZE_ERROR);
 
     const path = `receipts/${uid}/${txId}/${Date.now()}-${name}`;
     const task = uploadBytesResumable(ref(storage, path), blob, { contentType });

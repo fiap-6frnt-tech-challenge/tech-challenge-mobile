@@ -29,10 +29,42 @@ function nameFromUri(uri: string, fallback: string): string {
   return lastSegment && lastSegment.includes('.') ? decodeURIComponent(lastSegment) : fallback;
 }
 
-function fromImageAsset(asset: ImagePickerAsset): PickedAttachment {
+function extensionFor(asset: ImagePickerAsset): string {
+  const subtype = asset.mimeType?.split('/')[1];
+  if (subtype) return subtype === 'jpeg' ? 'jpg' : subtype;
+
+  const fromUri = asset.uri.split('?')[0].split('#')[0].split('.').pop();
+  return fromUri && fromUri.length <= 5 ? fromUri : 'jpg';
+}
+
+/** `recibo-20260825-134500.jpg` — readable in the list and sortable in Storage. */
+function receiptName(extension: string): string {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `recibo-${date}-${time}.${extension}`;
+}
+
+/**
+ * Android's photo picker reports the MediaStore row id as the display name
+ * (`34.jpg`), which tells the user nothing. Treat a stem without letters as
+ * missing so it falls back to a generated name.
+ */
+function isDescriptiveName(name: string | null | undefined): name is string {
+  if (!name) return false;
+  return /[a-z]/i.test(name.replace(/\.[^.]+$/, ''));
+}
+
+function fromImageAsset(asset: ImagePickerAsset, origin: 'camera' | 'library'): PickedAttachment {
   return {
     uri: asset.uri,
-    name: asset.fileName ?? nameFromUri(asset.uri, `foto-${Date.now()}.jpg`),
+    // A camera capture has no original filename — expo-image-picker names the cache
+    // file after a UUID — so always generate one rather than surfacing that.
+    name:
+      origin === 'library' && isDescriptiveName(asset.fileName)
+        ? asset.fileName
+        : receiptName(extensionFor(asset)),
     contentType: asset.mimeType ?? 'image/jpeg',
     size: asset.fileSize,
   };
@@ -47,10 +79,10 @@ function fromDocumentAsset(asset: DocumentPickerAsset): PickedAttachment {
   };
 }
 
-function fromImageResult(result: ImagePickerResult): PickResult {
+function fromImageResult(result: ImagePickerResult, origin: 'camera' | 'library'): PickResult {
   const asset = result.canceled ? undefined : result.assets?.[0];
   if (!asset) return { status: 'canceled' };
-  return { status: 'picked', attachment: fromImageAsset(asset) };
+  return { status: 'picked', attachment: fromImageAsset(asset, origin) };
 }
 
 const loadImagePicker = () => import('expo-image-picker');
@@ -64,7 +96,8 @@ export const expoAttachmentSource: AttachmentSource = {
     if (!permission.granted) return { status: 'denied', message: CAMERA_DENIED };
 
     return fromImageResult(
-      await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 })
+      await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 }),
+      'camera'
     );
   },
 
@@ -75,7 +108,8 @@ export const expoAttachmentSource: AttachmentSource = {
     if (!permission.granted) return { status: 'denied', message: LIBRARY_DENIED };
 
     return fromImageResult(
-      await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 })
+      await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 }),
+      'library'
     );
   },
 

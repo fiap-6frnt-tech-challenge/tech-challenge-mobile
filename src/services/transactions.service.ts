@@ -5,15 +5,17 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
-  getDocsFromServer,
+  onSnapshot,
   query,
   orderBy,
   serverTimestamp,
   limit,
   startAfter,
   where,
+  type FirestoreError,
   type QueryConstraint,
   type QueryDocumentSnapshot,
+  type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import {
@@ -24,27 +26,6 @@ import {
 } from '../domain';
 
 const col = (uid: string) => collection(db, 'users', uid, 'transactions');
-const TRANSACTION_LIST_TIMEOUT_MS = 10_000;
-
-function withTransactionListTimeout<T>(request: Promise<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(
-      () => reject(new Error('Transaction list request timed out')),
-      TRANSACTION_LIST_TIMEOUT_MS
-    );
-
-    request.then(
-      (value) => {
-        clearTimeout(timeoutId);
-        resolve(value);
-      },
-      (error: unknown) => {
-        clearTimeout(timeoutId);
-        reject(error);
-      }
-    );
-  });
-}
 
 const mapTransaction = (uid: string, snapshot: QueryDocumentSnapshot): Transaction => {
   const { descriptionNormalized: _descriptionNormalized, ...data } = snapshot.data();
@@ -66,7 +47,6 @@ export interface TxFilter {
   categories?: CategoryId[];
   dateFrom?: string;
   dateTo?: string;
-  // S3-02 defines normalized prefix search and the transaction write-path migration.
   search?: string;
 }
 
@@ -77,11 +57,16 @@ export interface TransactionPage {
 }
 
 export const transactionsService = {
-  async list(uid: string): Promise<Transaction[]> {
-    const snap = await withTransactionListTimeout(
-      getDocsFromServer(query(col(uid), orderBy('date', 'desc')))
+  subscribe(
+    uid: string,
+    onItems: (items: Transaction[]) => void,
+    onError: (error: FirestoreError) => void
+  ): Unsubscribe {
+    return onSnapshot(
+      query(col(uid), orderBy('date', 'desc')),
+      (snapshot) => onItems(snapshot.docs.map((document) => mapTransaction(uid, document))),
+      onError
     );
-    return snap.docs.map((document) => mapTransaction(uid, document));
   },
   async listPaged(
     uid: string,
