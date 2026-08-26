@@ -32,13 +32,17 @@ Liga `SearchInput` + `FilterSheet` ao `TxFilter` que alimenta o `useInfiniteTran
 
 ## Validação
 
-- [ ] Filtrar por data restringe corretamente
-- [ ] Multi-categoria funciona (usa `where('category','in',...)`)
-- [ ] Filtrar por tipo funciona
-- [ ] Busca por descrição filtra
-- [ ] Combinar filtros funciona (respeitando limites do Firestore)
-- [ ] Mudar filtro reseta o scroll p/ o topo
-- [ ] Chips refletem filtros ativos; limpar restaura tudo
+- [x] Filtrar por data restringe corretamente
+- [x] Multi-categoria funciona (usa `where('category','in',...)`)
+- [x] Filtrar por tipo funciona
+- [x] Busca por descrição filtra
+- [x] Combinar filtros funciona (respeitando limites do Firestore)
+- [x] Mudar filtro reseta o scroll p/ o topo
+- [x] Chips refletem filtros ativos; limpar restaura tudo
+
+> **Evidência:** testes automatizados cobrem composição/remoção de filtros, debounce contratado,
+> chips, contador e reset visual; smoke em device/simulator confirmou as queries e índices no
+> Firebase real.
 
 ## Gotchas
 
