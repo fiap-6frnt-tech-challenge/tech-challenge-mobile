@@ -282,8 +282,8 @@ function createStyles(theme: Theme) {
     },
     searchInput: { flex: 1 },
     filterButton: {
-      width: 48,
-      height: 48,
+      width: 44,
+      height: 44,
       borderRadius: theme.radius.default,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.primary,

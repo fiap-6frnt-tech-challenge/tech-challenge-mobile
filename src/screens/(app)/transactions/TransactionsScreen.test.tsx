@@ -374,6 +374,13 @@ describe('TransactionsScreen', () => {
     expect(filterMocks.scrollToOffset).toHaveBeenCalledWith({ offset: 0, animated: false });
   });
 
+  it('mantém o botão de filtros quadrado e alinhado à altura do campo de busca', () => {
+    const tree = renderScreen();
+    const filterButton = findByTestId(tree, 'transactions-filter-button');
+
+    expect(filterButton.props.style).toMatchObject({ width: 44, height: 44 });
+  });
+
   it('aplica filtros estruturados preservando a busca ativa', () => {
     const tree = renderScreen();
     act(() => findByTestId(tree, 'transactions-search').props.onSearch('mercado'));
