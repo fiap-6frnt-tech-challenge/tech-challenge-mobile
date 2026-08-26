@@ -44,14 +44,6 @@ Suíte automatizada: 19 testes passando (`useAttachments.test.tsx` + `storage.se
 2. **~~Detalhes não distingue falha de carga de registro inexistente~~ — corrigido.** A tela agora lê `error` do contexto e oferece "Tentar novamente", em vez de afirmar que a transação não existe.
 3. **~~Nome do anexo se perde nos pickers de imagem~~ — corrigido.** Captura de câmera não tem nome de origem, então passa a gerar `recibo-AAAAMMDD-HHMMSS.jpg`; nome vindo da galeria só é descartado quando não é descritivo (o id do MediaStore, `34.jpg`). "Escolher arquivo" segue preservando o nome real.
 
-### Não verificado
-
-- **Device real** — só emulador. O gotcha #3 pede explicitamente, e é onde o blob/upload costuma falhar.
-- **Objeto removido do Storage** — sem acesso ao console do Firebase; ver método usado no item 5.
-- **Gotcha #4** — cancelar o form após upload não foi testado.
-
-> Ficou na conta `Dev` a transação de teste "Teste anexo task 11" (R$ 123,45, 26/08/2026) com 2 anexos.
-
 ## Gotchas
 
 1. **`txId` antes do upload:** decidir criar o doc primeiro. Evita anexos órfãos sem transação.
