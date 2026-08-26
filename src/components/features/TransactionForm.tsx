@@ -105,7 +105,14 @@ export function TransactionForm({
     () =>
       (attachments ?? [])
         .filter(isStored)
-        .map(({ id, name, size, mimeType, url, path }) => ({ id, name, size, mimeType, url, path })),
+        .map(({ id, name, size, mimeType, url, path }) => ({
+          id,
+          name,
+          size,
+          mimeType,
+          url,
+          path,
+        })),
     [attachments]
   );
 

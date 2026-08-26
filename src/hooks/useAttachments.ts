@@ -2,7 +2,11 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { AttachmentItem } from '../components/ui/AttachmentList';
 import type { PickedAttachment } from '../components/ui/AttachmentPicker.source';
-import { MAX_TRANSACTION_ATTACHMENTS, validateAttachmentCandidate, type Attachment } from '../domain';
+import {
+  MAX_TRANSACTION_ATTACHMENTS,
+  validateAttachmentCandidate,
+  type Attachment,
+} from '../domain';
 import { storageService } from '../services/storage.service';
 
 const UPLOAD_ERROR = 'Não foi possível enviar o anexo. Tente novamente.';
@@ -89,13 +93,10 @@ export function useAttachments({
   const draftsRef = useRef<AttachmentDraft[]>([]);
   const persistedList = useMemo(() => persisted ?? [], [persisted]);
 
-  const updateDrafts = useCallback(
-    (updater: (current: AttachmentDraft[]) => AttachmentDraft[]) => {
-      draftsRef.current = updater(draftsRef.current);
-      setDrafts(draftsRef.current);
-    },
-    []
-  );
+  const updateDrafts = useCallback((updater: (current: AttachmentDraft[]) => AttachmentDraft[]) => {
+    draftsRef.current = updater(draftsRef.current);
+    setDrafts(draftsRef.current);
+  }, []);
 
   const patchDraft = useCallback(
     (id: string, patch: Partial<AttachmentDraft>) => {

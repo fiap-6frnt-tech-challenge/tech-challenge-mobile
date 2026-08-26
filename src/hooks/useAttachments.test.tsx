@@ -10,7 +10,11 @@ import {
   MAX_ATTACHMENT_SIZE_BYTES,
   type Attachment,
 } from '../domain';
-import { useAttachments, type UseAttachmentsOptions, type UseAttachmentsResult } from './useAttachments';
+import {
+  useAttachments,
+  type UseAttachmentsOptions,
+  type UseAttachmentsResult,
+} from './useAttachments';
 
 const storageMocks = vi.hoisted(() => ({
   uploadReceipt: vi.fn(),
@@ -152,7 +156,11 @@ describe('useAttachments on a transaction being created', () => {
     expect(storageMocks.uploadReceipt).not.toHaveBeenCalled();
     expect(current().pendingCount).toBe(1);
     expect(current().items).toEqual([
-      expect.objectContaining({ name: 'receipt.jpg', uri: 'file:///receipt.jpg', status: undefined }),
+      expect.objectContaining({
+        name: 'receipt.jpg',
+        uri: 'file:///receipt.jpg',
+        status: undefined,
+      }),
     ]);
   });
 
