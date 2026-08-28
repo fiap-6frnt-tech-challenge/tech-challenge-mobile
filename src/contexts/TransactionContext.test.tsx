@@ -17,7 +17,7 @@ vi.mock('./AuthContext', () => ({
 }));
 
 const transactionsServiceMocks = vi.hoisted(() => ({
-  list: vi.fn(),
+  subscribe: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   remove: vi.fn(),
@@ -62,6 +62,26 @@ function renderProvider(): void {
       </TransactionProvider>
     );
   });
+}
+
+const unsubscribe = vi.fn();
+
+function mockSubscription() {
+  let emitItems: (items: Transaction[]) => void = () => undefined;
+  let emitError: (error: unknown) => void = () => undefined;
+
+  transactionsServiceMocks.subscribe.mockImplementation(
+    (_uid: string, onItems: (items: Transaction[]) => void, onError: (error: unknown) => void) => {
+      emitItems = onItems;
+      emitError = onError;
+      return unsubscribe;
+    }
+  );
+
+  return {
+    items: (items: Transaction[]) => act(() => emitItems(items)),
+    fail: (error: unknown) => act(() => emitError(error)),
+  };
 }
 
 beforeEach(() => {
@@ -155,28 +175,76 @@ describe('TransactionProvider integration', () => {
         createdAt: '2026-08-12T00:00:00.000Z',
       },
     ];
-    transactionsServiceMocks.list.mockResolvedValue(mockItems);
+    const subscription = mockSubscription();
 
     await act(async () => {
       renderProvider();
     });
 
-    expect(transactionsServiceMocks.list).toHaveBeenCalledWith('user-123');
+    expect(transactionsServiceMocks.subscribe).toHaveBeenCalledWith(
+      'user-123',
+      expect.any(Function),
+      expect.any(Function)
+    );
+
+    subscription.items(mockItems);
+
     expect(currentTransactions().items).toEqual(mockItems);
     expect(currentTransactions().loading).toBe(false);
     expect(currentTransactions().error).toBeNull();
   });
 
-  it('sets error state when loading transactions fails', async () => {
+  it('drops the listener when the provider unmounts', async () => {
     authMocks.useAuth.mockReturnValue({ user: { uid: 'user-123' }, loading: false });
-    transactionsServiceMocks.list.mockRejectedValue(new Error('Fetch failed'));
+    mockSubscription();
 
     await act(async () => {
       renderProvider();
     });
+    act(() => renderer?.unmount());
+    renderer = undefined;
+
+    expect(unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  it('sets error state when the subscription fails', async () => {
+    authMocks.useAuth.mockReturnValue({ user: { uid: 'user-123' }, loading: false });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const subscription = mockSubscription();
+
+    await act(async () => {
+      renderProvider();
+    });
+    subscription.fail(new Error('Fetch failed'));
 
     expect(currentTransactions().error).toBe('Falha ao carregar transações');
     expect(currentTransactions().loading).toBe(false);
+  });
+
+  it('re-subscribes and settles when refresh is called after a failure', async () => {
+    authMocks.useAuth.mockReturnValue({ user: { uid: 'user-123' }, loading: false });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const subscription = mockSubscription();
+
+    await act(async () => {
+      renderProvider();
+    });
+    subscription.fail(new Error('Fetch failed'));
+
+    let settled = false;
+    await act(async () => {
+      const pending = currentTransactions()
+        .refresh()
+        .then(() => {
+          settled = true;
+        });
+      subscription.items([]);
+      await pending;
+    });
+
+    expect(transactionsServiceMocks.subscribe).toHaveBeenCalledTimes(2);
+    expect(settled).toBe(true);
+    expect(currentTransactions().error).toBeNull();
   });
 
   it('clears transaction items when user is logged out', async () => {
@@ -186,32 +254,21 @@ describe('TransactionProvider integration', () => {
       renderProvider();
     });
 
-    expect(transactionsServiceMocks.list).not.toHaveBeenCalled();
+    expect(transactionsServiceMocks.subscribe).not.toHaveBeenCalled();
     expect(currentTransactions().items).toEqual([]);
     expect(currentTransactions().loading).toBe(false);
   });
 
-  it('delegates transaction creation and refreshes state', async () => {
+  it('delegates transaction creation and lets the listener publish it', async () => {
     authMocks.useAuth.mockReturnValue({ user: { uid: 'user-123' }, loading: false });
-    transactionsServiceMocks.list.mockResolvedValue([]);
+    const subscription = mockSubscription();
 
     await act(async () => {
       renderProvider();
     });
+    subscription.items([]);
 
-    transactionsServiceMocks.create.mockResolvedValue({ id: '2' });
-    transactionsServiceMocks.list.mockResolvedValue([
-      {
-        id: '2',
-        userId: 'user-123',
-        type: 'withdrawal',
-        description: 'New',
-        amount: 20,
-        category: 'housing',
-        date: '2026-08-12',
-        createdAt: '2026-08-12T00:00:00.000Z',
-      },
-    ]);
+    transactionsServiceMocks.create.mockResolvedValue('2');
 
     await act(async () => {
       await currentTransactions().create({
@@ -230,6 +287,21 @@ describe('TransactionProvider integration', () => {
       category: 'housing',
       date: '2026-08-12',
     });
+    expect(transactionsServiceMocks.subscribe).toHaveBeenCalledOnce();
+
+    subscription.items([
+      {
+        id: '2',
+        userId: 'user-123',
+        type: 'withdrawal',
+        description: 'New',
+        amount: 20,
+        category: 'housing',
+        date: '2026-08-12',
+        createdAt: '2026-08-12T00:00:00.000Z',
+      },
+    ]);
+
     expect(currentTransactions().items[0].description).toBe('New');
   });
 
@@ -245,14 +317,14 @@ describe('TransactionProvider integration', () => {
       date: '2026-08-12',
       createdAt: '2026-08-12T00:00:00.000Z',
     };
-    transactionsServiceMocks.list.mockResolvedValue([initialItem]);
+    const subscription = mockSubscription();
 
     await act(async () => {
       renderProvider();
     });
+    subscription.items([initialItem]);
 
     transactionsServiceMocks.update.mockResolvedValue(undefined);
-    transactionsServiceMocks.list.mockResolvedValue([{ ...initialItem, description: 'Updated' }]);
 
     await act(async () => {
       await currentTransactions().update('1', { description: 'Updated' });
@@ -261,6 +333,10 @@ describe('TransactionProvider integration', () => {
     expect(transactionsServiceMocks.update).toHaveBeenCalledWith('user-123', '1', {
       description: 'Updated',
     });
+    expect(transactionsServiceMocks.subscribe).toHaveBeenCalledOnce();
+
+    subscription.items([{ ...initialItem, description: 'Updated' }]);
+
     expect(currentTransactions().items[0].description).toBe('Updated');
   });
 
@@ -276,20 +352,24 @@ describe('TransactionProvider integration', () => {
       date: '2026-08-12',
       createdAt: '2026-08-12T00:00:00.000Z',
     };
-    transactionsServiceMocks.list.mockResolvedValue([initialItem]);
+    const subscription = mockSubscription();
 
     await act(async () => {
       renderProvider();
     });
+    subscription.items([initialItem]);
 
     transactionsServiceMocks.remove.mockResolvedValue(undefined);
-    transactionsServiceMocks.list.mockResolvedValue([]);
 
     await act(async () => {
       await currentTransactions().remove('1');
     });
 
     expect(transactionsServiceMocks.remove).toHaveBeenCalledWith('user-123', '1');
+    expect(transactionsServiceMocks.subscribe).toHaveBeenCalledOnce();
+
+    subscription.items([]);
+
     expect(currentTransactions().items).toEqual([]);
   });
 });

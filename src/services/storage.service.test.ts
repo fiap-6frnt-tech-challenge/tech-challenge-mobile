@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ATTACHMENT_SIZE_ERROR, ATTACHMENT_TYPE_ERROR } from '../domain';
 import { storageService } from './storage.service';
 
 const firebaseService = vi.hoisted(() => ({
@@ -35,7 +36,7 @@ describe('storage service', () => {
         'receipt.gif',
         'image/gif'
       )
-    ).rejects.toThrow('Tipo não permitido');
+    ).rejects.toThrow(ATTACHMENT_TYPE_ERROR);
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(firebaseStorage.uploadBytesResumable).not.toHaveBeenCalled();
@@ -55,7 +56,7 @@ describe('storage service', () => {
         'large.pdf',
         'application/pdf'
       )
-    ).rejects.toThrow('Arquivo excede 5MB');
+    ).rejects.toThrow(ATTACHMENT_SIZE_ERROR);
 
     expect(fetchMock).toHaveBeenCalledWith('file:///large.pdf');
     expect(firebaseStorage.uploadBytesResumable).not.toHaveBeenCalled();

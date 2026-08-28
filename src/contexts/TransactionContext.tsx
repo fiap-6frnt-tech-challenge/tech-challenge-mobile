@@ -1,4 +1,13 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { Transaction } from '../domain';
 import { transactionsService } from '../services/transactions.service';
 import { useAuth } from './AuthContext';
@@ -11,7 +20,7 @@ interface TransactionState {
 }
 
 interface TransactionsContext extends TransactionState {
-  create: (data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) => Promise<void>;
+  create: (data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) => Promise<string>;
   update: (id: string, patch: Partial<Transaction>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   removeAttachment: (txId: string, attachmentId: string) => Promise<void>;
@@ -46,24 +55,28 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const refresh = useCallback(async () => {
-    if (!user) {
-      dispatch({ type: 'LOADED', items: [] });
-      return;
-    }
-    dispatch({ type: 'LOADING' });
-    try {
-      dispatch({ type: 'LOADED', items: await transactionsService.list(user.uid) });
-    } catch {
-      dispatch({ type: 'ERROR', error: 'Falha ao carregar transações' });
-    }
-  }, [user]);
+  const [subscriptionAttempt, setSubscriptionAttempt] = useState(0);
+  const refreshWaitersRef = useRef<(() => void)[]>([]);
+
+  const settleRefreshWaiters = useCallback(() => {
+    const waiters = refreshWaitersRef.current;
+    refreshWaitersRef.current = [];
+    waiters.forEach((resolve) => resolve());
+  }, []);
+
+  const refresh = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        refreshWaitersRef.current.push(resolve);
+        setSubscriptionAttempt((attempt) => attempt + 1);
+      }),
+    []
+  );
 
   const create = async (data: Omit<Transaction, 'id' | 'userId' | 'createdAt'>) => {
     if (!user) throw new Error('Usuário não autenticado');
     try {
-      await transactionsService.create(user.uid, data);
-      await refresh();
+      return await transactionsService.create(user.uid, data);
     } catch (e) {
       dispatch({ type: 'ERROR', error: 'Falha ao criar transação' });
       throw e;
@@ -74,7 +87,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('Usuário não autenticado');
     try {
       await transactionsService.update(user.uid, id, patch);
-      await refresh();
     } catch (e) {
       dispatch({ type: 'ERROR', error: 'Falha ao atualizar transação' });
       throw e;
@@ -85,7 +97,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('Usuário não autenticado');
     try {
       await transactionsService.remove(user.uid, id);
-      await refresh();
     } catch (e) {
       dispatch({ type: 'ERROR', error: 'Falha ao remover transação' });
       throw e;
@@ -106,7 +117,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       await transactionsService.update(user.uid, id, {
         attachments: remainingAttachments,
       });
-      await refresh();
     } catch (e) {
       dispatch({ type: 'ERROR', error: 'Falha ao remover anexo' });
       throw e;
@@ -114,8 +124,27 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    refresh();
-  }, [user, refresh]);
+    if (!user) {
+      dispatch({ type: 'LOADED', items: [] });
+      settleRefreshWaiters();
+      return;
+    }
+
+    dispatch({ type: 'LOADING' });
+
+    return transactionsService.subscribe(
+      user.uid,
+      (items) => {
+        dispatch({ type: 'LOADED', items });
+        settleRefreshWaiters();
+      },
+      (error) => {
+        console.error('[TransactionContext] transaction subscription failed', error);
+        dispatch({ type: 'ERROR', error: 'Falha ao carregar transações' });
+        settleRefreshWaiters();
+      }
+    );
+  }, [user, subscriptionAttempt, settleRefreshWaiters]);
 
   const value: TransactionsContext = {
     ...state,
