@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Plus } from 'lucide-react-native';
+import { ListFilter, Plus } from 'lucide-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -8,7 +8,6 @@ import {
   RefreshControl,
   StyleSheet,
   View,
-  type LayoutChangeEvent,
   type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,11 +16,24 @@ import { TransactionItem } from '@/src/components/features/TransactionItem';
 import { TransactionListFeedback } from '@/src/components/features/TransactionListFeedback';
 import { TransactionListSkeleton } from '@/src/components/features/TransactionListSkeleton';
 import { Button } from '@/src/components/ui/Button';
+import { Chip } from '@/src/components/ui/Chip';
+import { FilterSheet } from '@/src/components/ui/FilterSheet';
+import { SearchInput } from '@/src/components/ui/SearchInput';
 import { Text } from '@/src/components/ui/Text';
 import type { Transaction } from '@/src/domain';
 import { useInfiniteTransactions } from '@/src/hooks/useInfiniteTransactions';
 import type { TxFilter } from '@/src/services/transactions.service';
 import { useTheme, type Theme } from '@/src/theme';
+import {
+  getActiveTransactionFilterChips,
+  hasAnyTransactionFilter,
+  removeTransactionFilter,
+  replaceStructuredTransactionFilters,
+  toStructuredTransactionFilter,
+  updateTransactionSearch,
+  type StructuredTransactionFilter,
+  type TransactionFilterChipKey,
+} from './transactionFilters';
 
 const keyExtractor = (transaction: Transaction) => transaction.id;
 
@@ -30,12 +42,14 @@ export default function TransactionsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const [filter] = useState<TxFilter>({});
-  const [rowHeight, setRowHeight] = useState(0);
+  const [filter, setFilter] = useState<TxFilter>({});
+  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [searchResetGeneration, setSearchResetGeneration] = useState(0);
   const { items, loading, refreshing, hasMore, error, loadMore, refresh } =
     useInfiniteTransactions(filter);
 
   const firstFocusRef = useRef(true);
+  const listRef = useRef<FlatList<Transaction>>(null);
   useFocusEffect(
     useCallback(() => {
       if (firstFocusRef.current) {
@@ -62,38 +76,114 @@ export default function TransactionsScreen() {
     [hasMore, loadMore, refresh]
   );
 
-  const handleFirstRowLayout = useCallback((event: LayoutChangeEvent) => {
-    const height = Math.round(event.nativeEvent.layout.height);
-    setRowHeight((current) => (current === height ? current : height));
+  const activeFilterChips = useMemo(() => getActiveTransactionFilterChips(filter), [filter]);
+  const structuredFilter = useMemo(() => toStructuredTransactionFilter(filter), [filter]);
+  const hasAppliedFilters = hasAnyTransactionFilter(filter);
+  const resultCount = items.length === 0 && (loading || error) ? undefined : items.length;
+  const filterButtonAccessibilityLabel =
+    activeFilterChips.length === 0
+      ? 'Abrir filtros'
+      : `Abrir filtros, ${activeFilterChips.length} ${
+          activeFilterChips.length === 1 ? 'ativo' : 'ativos'
+        }`;
+
+  const resetListPosition = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
 
-  const getItemLayout = useMemo(
-    () =>
-      rowHeight > 0
-        ? (_data: ArrayLike<Transaction> | null | undefined, index: number) => ({
-            length: rowHeight,
-            offset: rowHeight * index,
-            index,
-          })
-        : undefined,
-    [rowHeight]
+  const changeFilter = useCallback(
+    (update: (current: TxFilter) => TxFilter) => {
+      setFilter(update);
+      resetListPosition();
+    },
+    [resetListPosition]
   );
 
+  const handleSearch = useCallback(
+    (search: string) => changeFilter((current) => updateTransactionSearch(current, search)),
+    [changeFilter]
+  );
+
+  const handleApplyFilters = useCallback(
+    (value: StructuredTransactionFilter) =>
+      changeFilter((current) => replaceStructuredTransactionFilters(current, value)),
+    [changeFilter]
+  );
+
+  const handleRemoveFilter = useCallback(
+    (key: TransactionFilterChipKey) =>
+      changeFilter((current) => removeTransactionFilter(current, key)),
+    [changeFilter]
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setSearchResetGeneration((current) => current + 1);
+    changeFilter(() => ({}));
+  }, [changeFilter]);
+
   const renderItem = useCallback<ListRenderItem<Transaction>>(
-    ({ item, index }) => (
-      <View onLayout={index === 0 ? handleFirstRowLayout : undefined}>
-        <TransactionItem transaction={item} onPress={handlePress} />
-      </View>
-    ),
-    [handleFirstRowLayout, handlePress]
+    ({ item }) => <TransactionItem transaction={item} onPress={handlePress} />,
+    [handlePress]
   );
 
   const listEmpty = loading ? (
     <TransactionListSkeleton />
   ) : error ? (
     <TransactionListFeedback variant="error" onAction={handleRefresh} />
+  ) : hasAppliedFilters ? (
+    <TransactionListFeedback variant="no-results" onAction={handleClearFilters} />
   ) : (
     <TransactionListFeedback variant="empty" onAction={handleAdd} />
+  );
+
+  const listHeader = (
+    <View style={styles.filtersHeader} testID="transactions-filters-header">
+      <View style={styles.searchRow}>
+        <SearchInput
+          key={searchResetGeneration}
+          defaultValue={filter.search ?? ''}
+          onSearch={handleSearch}
+          debounceMs={300}
+          resultCount={resultCount}
+          style={styles.searchInput}
+          testID="transactions-search"
+        />
+        <Pressable
+          onPress={() => setFiltersVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={filterButtonAccessibilityLabel}
+          testID="transactions-filter-button"
+          style={styles.filterButton}>
+          <ListFilter size={22} color={theme.colors.primary} />
+          {activeFilterChips.length > 0 ? (
+            <View style={styles.filterCount}>
+              <Text variant="caption" style={styles.filterCountText}>
+                {activeFilterChips.length}
+              </Text>
+            </View>
+          ) : null}
+        </Pressable>
+      </View>
+
+      {activeFilterChips.length > 0 ? (
+        <View style={styles.activeFilters} testID="transactions-active-filters">
+          {activeFilterChips.map((chip) => (
+            <Chip
+              key={chip.key}
+              label={chip.label}
+              onRemove={() => handleRemoveFilter(chip.key)}
+              testID={`transactions-filter-${chip.key}`}
+            />
+          ))}
+          <Button
+            title="Limpar filtros"
+            variant="tertiary"
+            onPress={handleClearFilters}
+            testID="transactions-clear-filters"
+          />
+        </View>
+      ) : null}
+    </View>
   );
 
   const listFooter =
@@ -124,12 +214,13 @@ export default function TransactionsScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
       <FlatList
+        ref={listRef}
         data={items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        getItemLayout={getItemLayout}
         onEndReached={hasMore ? handleEndReached : undefined}
         onEndReachedThreshold={0.5}
+        ListHeaderComponent={listHeader}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
         refreshControl={
@@ -145,6 +236,14 @@ export default function TransactionsScreen() {
         maxToRenderPerBatch={8}
         windowSize={9}
         testID="transactions-list"
+      />
+
+      <FilterSheet
+        visible={filtersVisible}
+        value={structuredFilter}
+        onApply={handleApplyFilters}
+        onClose={() => setFiltersVisible(false)}
+        testID="transactions-filter-sheet"
       />
 
       <Pressable
@@ -171,6 +270,45 @@ function createStyles(theme: Theme) {
     },
     listContentEmpty: {
       flexGrow: 1,
+    },
+    filtersHeader: {
+      gap: theme.spacing.md,
+      paddingBottom: theme.spacing.md,
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.sm,
+    },
+    searchInput: { flex: 1 },
+    filterButton: {
+      width: 44,
+      height: 44,
+      borderRadius: theme.radius.default,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    filterCount: {
+      position: 'absolute',
+      top: 2,
+      right: 2,
+      minWidth: 18,
+      height: 18,
+      paddingHorizontal: 4,
+      borderRadius: 9,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.primary,
+    },
+    filterCountText: { color: theme.colors.textInverse },
+    activeFilters: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
     },
     footerSpinner: {
       paddingVertical: theme.spacing.lg,
