@@ -65,3 +65,50 @@ docs/                        Planning and delivery documentation
 - Xcode para desenvolvimento iOS e Android Studio/JDK para desenvolvimento Android.
 - Java 21 somente ao executar a Firebase Emulator Suite exatamente como no CI.
 - Uma conta Expo somente para builds em nuvem com EAS.
+
+## Configuração do Firebase
+
+1. Crie um projeto no Firebase.
+2. Registre um aplicativo Web, pois o app usa o Firebase JavaScript SDK.
+3. Ative `Authentication -> Sign-in method -> Email/Password`.
+4. Crie o Cloud Firestore.
+5. Ative o Cloud Storage e confirme que o nome do bucket copiado para `.env` termina com o bucket configurado pelo Firebase.
+6. Autentique a Firebase CLI, selecione o projeto e publique as rules e os indexes versionados.
+
+```bash
+npx -p firebase-tools firebase login
+npx -p firebase-tools firebase use --add
+npx -p firebase-tools firebase deploy --only firestore:rules,firestore:indexes,storage
+```
+
+`firebase use --add` associa o checkout local ao projeto selecionado pelo desenvolvedor; ele não adiciona secrets privados do cliente ao Git.
+
+## Variáveis de ambiente
+
+Crie o arquivo local a partir do exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Preencha `EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`, `EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`, `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `EXPO_PUBLIC_FIREBASE_APP_ID` com os valores em Firebase Console -> Project settings -> Your apps -> SDK setup and configuration. Mantenha `EXPO_PUBLIC_STORYBOOK=false` para o app normal.
+
+`.env` e `.env.local` são ignorados pelo Git. Valores `EXPO_PUBLIC_*` são incorporados ao bundle do cliente e não devem ser tratados como secrets de servidor. A autorização vem dos caminhos autenticados e das rules versionadas no repositório, não de ocultar a configuração do Firebase.
+
+## Busca e índices do Firestore
+
+As operações de criação e atualização gravam `descriptionNormalized`. As consultas normalizam o termo digitado, aplicam o intervalo `>= prefix` e `<= prefix\uf8ff`, ordenam por descrição normalizada e data, e paginam com cursor de documento. Isso oferece correspondência por prefixo normalizada e sem distinção de maiúsculas/minúsculas ou acentos, não busca arbitrária por substring nem busca full-text. Registros criados antes da existência do campo normalizado precisam de backfill.
+
+| Use                      | Ordered/filter fields                                                |
+| ------------------------ | -------------------------------------------------------------------- |
+| Type                     | `type ASC`, `date DESC`                                              |
+| Category                 | `category ASC`, `date DESC`                                          |
+| Type + category          | `type ASC`, `category ASC`, `date DESC`                              |
+| Search                   | `descriptionNormalized ASC`, `date DESC`                             |
+| Type + search            | `type ASC`, `descriptionNormalized ASC`, `date DESC`                 |
+| Category + search        | `category ASC`, `descriptionNormalized ASC`, `date DESC`             |
+| Type + category + search | `type ASC`, `category ASC`, `descriptionNormalized ASC`, `date DESC` |
+
+`firebase deploy --only firestore:indexes` publica essas definições. Se uma futura forma de consulta exigir um index ausente, o erro do Firestore ainda pode apresentar um link direto para o Console.
+
+## Segurança
