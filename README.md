@@ -59,14 +59,26 @@ docs/                        Planning and delivery documentation
 ## Pré-requisitos
 
 - Node.js 20 ou superior; Node.js 24 é recomendado para acompanhar o CI.
-- npm e Git; em um clone novo, prefira `npm ci`.
+- npm e Git; em um clone novo, siga o comando de instalação indicado abaixo.
 - Um projeto Firebase com permissão para configurar Auth, Firestore, Storage, rules e indexes.
 - Expo Go compatível ou um Simulador iOS/Emulador Android com o native development build.
 - Xcode para desenvolvimento iOS e Android Studio/JDK para desenvolvimento Android.
 - Java 21 somente ao executar a Firebase Emulator Suite exatamente como no CI.
 - Uma conta Expo somente para builds em nuvem com EAS.
 
+## Instalação e execução
+
+Em um terminal, crie o checkout local e instale as dependências:
+
+```bash
+git clone https://github.com/fiap-6frnt-tech-challenge/tech-challenge-mobile.git
+cd tech-challenge-mobile
+npm ci
+```
+
 ## Configuração do Firebase
+
+Ainda dentro do checkout criado acima:
 
 1. Crie um projeto no Firebase.
 2. Registre um aplicativo Web, pois o app usa o Firebase JavaScript SDK.
@@ -85,15 +97,29 @@ npx -p firebase-tools firebase deploy --only firestore:rules,firestore:indexes,s
 
 ## Variáveis de ambiente
 
-Crie o arquivo local a partir do exemplo:
+Ainda dentro do checkout, crie o arquivo local a partir do exemplo:
 
 ```bash
 cp .env.example .env
 ```
 
-Preencha `EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`, `EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`, `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `EXPO_PUBLIC_FIREBASE_APP_ID` com os valores em Firebase Console -> Project settings -> Your apps -> SDK setup and configuration. Mantenha `EXPO_PUBLIC_STORYBOOK=false` para o app normal.
+Preencha `EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`, `EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`, `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `EXPO_PUBLIC_FIREBASE_APP_ID` com os valores em Firebase Console -> Project settings -> Your apps -> SDK setup and configuration. Mantenha `EXPO_PUBLIC_STORYBOOK=false` para o app normal antes de iniciar o Expo.
 
 `.env` e `.env.local` são ignorados pelo Git. Valores `EXPO_PUBLIC_*` são incorporados ao bundle do cliente e não devem ser tratados como secrets de servidor. A autorização vem dos caminhos autenticados e das rules versionadas no repositório, não de ocultar a configuração do Firebase.
+Com a configuração publicada e o `.env` preenchido, inicie o Expo:
+
+```bash
+npm start
+```
+
+No terminal do Expo, pressione `a` para abrir no Android, `i` para abrir no iOS e `r` para recarregar o app. Para gerar e executar diretamente o native development build depois da configuração, use:
+
+```bash
+npm run ios
+npm run android
+```
+
+Uma versão da Expo Go da App Store incompatível com o Expo SDK 56 não abre o projeto. Nesse caso, use a Expo Go compatível com o SDK ou o simulador/emulador com o native development build gerado pelos comandos nativos.
 
 ## Busca e índices do Firestore
 
@@ -116,27 +142,6 @@ As operações de criação e atualização gravam `descriptionNormalized`. As c
 Os dados do Firestore ficam em `users/{uid}/transactions/{transactionId}`; apenas o `uid` autenticado correspondente pode ler ou escrever. Os comprovantes no Storage ficam em `receipts/{uid}/{transactionId}/{fileName}`; apenas o usuário autenticado correspondente pode ler, criar, atualizar ou excluir.
 
 As rules de upload aceitam JPEG, PNG, WEBP ou PDF com no máximo 5 MB.
-
-## Instalação e execução
-
-Depois de configurar o Firebase e preencher o `.env`, clone o projeto, instale as dependências e inicie o Expo:
-
-```bash
-git clone https://github.com/fiap-6frnt-tech-challenge/tech-challenge-mobile.git
-cd tech-challenge-mobile
-cp .env.example .env
-npm ci
-npm start
-```
-
-No terminal do Expo, pressione `a` para abrir no Android, `i` para abrir no iOS e `r` para recarregar o app. Para gerar e executar diretamente o native development build, use:
-
-```bash
-npm run ios
-npm run android
-```
-
-Uma versão da Expo Go da App Store incompatível com o Expo SDK 56 não abre o projeto. Nesse caso, use a Expo Go compatível com o SDK ou o simulador/emulador com o native development build gerado pelos comandos nativos.
 
 ## Testes e qualidade
 

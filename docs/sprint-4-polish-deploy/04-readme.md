@@ -18,25 +18,12 @@ Entregável obrigatório: README com **configuração do Firebase**, dependênci
 
 1. **Sobre** — Bytebank Mobile, print/gif do app, stack (Expo/RN, Firebase, Context API)
 2. **Requisitos** — Node 20+, Expo Go (ou emulador Android/iOS), conta Firebase
-3. **Configuração do Firebase** (passo a passo):
-   - Criar projeto no console
-   - Habilitar Authentication → Email/Password
-   - Criar Firestore + publicar `firestore.rules` (comando)
-   - Habilitar Storage + publicar `storage.rules`
-   - Registrar Web App e copiar `firebaseConfig`
-   - Criar índices compostos (link do erro do Firestore) — listar os necessários
-4. **Variáveis de ambiente** — copiar `.env.example` → `.env` e preencher `EXPO_PUBLIC_*`
-5. **Instalar e rodar**:
-   ```bash
-   npm install
-   npx expo start        # abrir em Expo Go / emulador
-   ```
-6. **Testes** — `npm test`
-7. **Storybook** — como abrir o catálogo de componentes (toggle por env, ex.: `EXPO_PUBLIC_STORYBOOK=true npx expo start`)
-8. **Build (APK)** — `eas build -p android --profile preview`
-9. **Estrutura do projeto** — árvore de pastas resumida
-10. **Funcionalidades** — checklist mapeado à spec
-11. **Vídeo demo** — link
+3. **Configuração e execução operacional** — consulte o [README raiz](../../README.md), que define a sequência para clone, `cd`, `npm ci`, Firebase, `.env` e inicialização do app.
+4. **Firebase e variáveis de ambiente** — o README raiz documenta Auth, Firestore, Storage, rules, índices, o único `cp .env.example .env` e as chaves `EXPO_PUBLIC_*`.
+5. **Testes, Storybook e build Android** — use os scripts e comandos exatos do README raiz; ele é a fonte de verdade para o catálogo no dispositivo e o perfil EAS `preview`.
+6. **Estrutura do projeto** — árvore de pastas resumida.
+7. **Funcionalidades** — checklist mapeado à spec.
+8. **Vídeo demo** — link.
 
 ## Validação
 
