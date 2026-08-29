@@ -27,7 +27,7 @@ import {
   type AnimatedSectionGroupHandle,
 } from '@/src/components/ui/motion';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { CATEGORIES, type CategoryId, type MonthlyAggregate } from '@/src/domain';
+import { CATEGORY_LABEL_MAP, type MonthlyAggregate } from '@/src/domain';
 import { useDashboardData } from '@/src/hooks/useDashboardData';
 import { spacing, useTheme, type Theme } from '@/src/theme';
 import { getDashboardViewState, runDashboardRefresh } from './dashboardState';
@@ -36,10 +36,6 @@ const CHART_MAX_WIDTH = 640;
 const CONTENT_MAX_WIDTH = CHART_MAX_WIDTH + (spacing.lg + spacing.md) * 2;
 
 const EMPTY_MONTH: MonthlyAggregate = { month: '', income: 0, expense: 0 };
-
-const CATEGORY_LABELS = Object.fromEntries(
-  CATEGORIES.map((category) => [category.id, category.label])
-) as Record<CategoryId, string>;
 
 function firstName(displayName?: string | null, email?: string | null): string | null {
   const name = displayName?.trim().split(/\s+/)[0];
@@ -81,6 +77,7 @@ export default function DashboardScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const sectionsRef = useRef<AnimatedSectionGroupHandle>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [entranceDone, setEntranceDone] = useState(false);
   const [isEmptyErrorRetryPending, setIsEmptyErrorRetryPending] = useState(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const dashboardViewState = getDashboardViewState({ loading, refreshing, error, isEmpty });
@@ -121,6 +118,9 @@ export default function DashboardScreen() {
 
   const handleErrorRetry = handleRefresh;
 
+  const handleEntranceComplete = useCallback(() => setEntranceDone(true), []);
+  const showEntranceSkeleton = viewState === 'content' && !entranceDone;
+
   const name = firstName(user?.displayName, user?.email);
   const currentMonth = byMonth.at(-1) ?? EMPTY_MONTH;
   const previousMonth = byMonth.at(-2) ?? EMPTY_MONTH;
@@ -128,7 +128,7 @@ export default function DashboardScreen() {
 
   const insight = topCategory
     ? {
-        label: CATEGORY_LABELS[topCategory.category] ?? topCategory.category,
+        label: CATEGORY_LABEL_MAP[topCategory.category] ?? topCategory.category,
         value: formatBRL(topCategory.total),
         share:
           currentMonth.expense > 0
@@ -250,7 +250,7 @@ export default function DashboardScreen() {
                 </Card>
               </AnimatedSection>
 
-              <AnimatedSection index={4}>
+              <AnimatedSection index={4} onAnimationComplete={handleEntranceComplete}>
                 <Card>
                   <BalanceLineChart
                     data={balanceOverTime}
@@ -263,6 +263,17 @@ export default function DashboardScreen() {
           ) : null}
         </ScrollView>
       </AnimatedSectionGroup>
+
+      {showEntranceSkeleton ? (
+        <View
+          style={styles.entranceSkeleton}
+          pointerEvents="none"
+          testID="dashboard-entrance-skeleton">
+          <View style={styles.content}>
+            <DashboardSkeleton />
+          </View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -290,6 +301,14 @@ function createStyles(theme: Theme) {
     kpiRow: {
       flexDirection: 'row',
       gap: theme.spacing.sm,
+    },
+    entranceSkeleton: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      backgroundColor: theme.colors.background,
     },
     inlineError: {
       gap: theme.spacing.sm,

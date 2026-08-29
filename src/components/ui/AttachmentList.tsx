@@ -1,7 +1,7 @@
+import { Image } from 'expo-image';
 import { FileText, Trash2, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
-  Image,
   Linking,
   Modal,
   Pressable,
@@ -39,6 +39,9 @@ export interface AttachmentListProps {
 }
 
 const OPEN_ERROR = 'Não foi possível abrir o anexo.';
+
+const IMAGE_CACHE_POLICY = 'memory-disk';
+const IMAGE_TRANSITION_MS = 120;
 
 function isImage(attachment: AttachmentItem): boolean {
   return attachment.mimeType.startsWith('image/');
@@ -131,7 +134,10 @@ export function AttachmentList({
             <Image
               source={{ uri: previewUri }}
               style={styles.previewImage}
-              resizeMode="contain"
+              contentFit="contain"
+              cachePolicy={IMAGE_CACHE_POLICY}
+              recyclingKey={preview?.id}
+              transition={IMAGE_TRANSITION_MS}
               accessible
               accessibilityRole="image"
               accessibilityLabel={`Visualização de ${preview?.name}`}
@@ -200,7 +206,14 @@ function AttachmentRow({ attachment, onPress, onRemove, readonly, testID }: Atta
         style={[styles.rowContent, pressed && openable && styles.pressed]}
         testID={testID ? `${testID}-open` : undefined}>
         {thumbnailUri ? (
-          <Image source={{ uri: thumbnailUri }} style={styles.thumbnail} resizeMode="cover" />
+          <Image
+            source={{ uri: thumbnailUri }}
+            style={styles.thumbnail}
+            contentFit="cover"
+            cachePolicy={IMAGE_CACHE_POLICY}
+            recyclingKey={attachment.id}
+            transition={IMAGE_TRANSITION_MS}
+          />
         ) : (
           <View style={styles.thumbnailFallback}>
             <FileText size={20} color={theme.colors.iconSecondary} />

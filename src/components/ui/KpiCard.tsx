@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme, type Theme } from '@/src/theme';
@@ -26,7 +26,7 @@ export interface KpiCardProps {
   testID?: string;
 }
 
-export function KpiCard({
+export const KpiCard = memo(function KpiCard({
   label,
   value,
   tone,
@@ -84,7 +84,7 @@ export function KpiCard({
       ) : null}
     </Card>
   );
-}
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({

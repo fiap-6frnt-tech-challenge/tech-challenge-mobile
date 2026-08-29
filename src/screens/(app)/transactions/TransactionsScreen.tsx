@@ -4,10 +4,12 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   View,
+  type LayoutChangeEvent,
   type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,7 +25,7 @@ import { Text } from '@/src/components/ui/Text';
 import type { Transaction } from '@/src/domain';
 import { useInfiniteTransactions } from '@/src/hooks/useInfiniteTransactions';
 import type { TxFilter } from '@/src/services/transactions.service';
-import { useTheme, type Theme } from '@/src/theme';
+import { spacing, useTheme, type Theme } from '@/src/theme';
 import {
   getActiveTransactionFilterChips,
   hasAnyTransactionFilter,
@@ -37,6 +39,14 @@ import {
 
 const keyExtractor = (transaction: Transaction) => transaction.id;
 
+const REMOVE_CLIPPED_SUBVIEWS = Platform.OS === 'android';
+
+const LIST_CONTENT_PADDING = spacing.md;
+
+function measuredHeight(event: LayoutChangeEvent): number {
+  return Math.round(event.nativeEvent.layout.height);
+}
+
 export default function TransactionsScreen() {
   const router = useRouter();
   const theme = useTheme();
@@ -45,6 +55,8 @@ export default function TransactionsScreen() {
   const [filter, setFilter] = useState<TxFilter>({});
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [searchResetGeneration, setSearchResetGeneration] = useState(0);
+  const [rowHeight, setRowHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const { items, loading, refreshing, hasMore, error, loadMore, refresh } =
     useInfiniteTransactions(filter);
 
@@ -121,9 +133,37 @@ export default function TransactionsScreen() {
     changeFilter(() => ({}));
   }, [changeFilter]);
 
+  const handleFirstRowLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = measuredHeight(event);
+    setRowHeight((current) => (current === height ? current : height));
+  }, []);
+
+  const handleHeaderLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = measuredHeight(event);
+    setHeaderHeight((current) => (current === height ? current : height));
+  }, []);
+
+  const getItemLayout = useMemo(
+    () =>
+      rowHeight > 0 && headerHeight > 0
+        ? (_data: ArrayLike<Transaction> | null | undefined, index: number) => ({
+            length: rowHeight,
+            offset: LIST_CONTENT_PADDING + headerHeight + rowHeight * index,
+            index,
+          })
+        : undefined,
+    [headerHeight, rowHeight]
+  );
+
   const renderItem = useCallback<ListRenderItem<Transaction>>(
-    ({ item }) => <TransactionItem transaction={item} onPress={handlePress} />,
-    [handlePress]
+    ({ item, index }) => (
+      <TransactionItem
+        transaction={item}
+        onPress={handlePress}
+        onLayout={index === 0 ? handleFirstRowLayout : undefined}
+      />
+    ),
+    [handleFirstRowLayout, handlePress]
   );
 
   const listEmpty = loading ? (
@@ -137,7 +177,10 @@ export default function TransactionsScreen() {
   );
 
   const listHeader = (
-    <View style={styles.filtersHeader} testID="transactions-filters-header">
+    <View
+      style={styles.filtersHeader}
+      onLayout={handleHeaderLayout}
+      testID="transactions-filters-header">
       <View style={styles.searchRow}>
         <SearchInput
           key={searchResetGeneration}
@@ -218,6 +261,7 @@ export default function TransactionsScreen() {
         data={items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
+        getItemLayout={getItemLayout}
         onEndReached={hasMore ? handleEndReached : undefined}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={listHeader}
@@ -234,7 +278,9 @@ export default function TransactionsScreen() {
         contentContainerStyle={[styles.listContent, items.length === 0 && styles.listContentEmpty]}
         initialNumToRender={8}
         maxToRenderPerBatch={8}
+        updateCellsBatchingPeriod={50}
         windowSize={9}
+        removeClippedSubviews={REMOVE_CLIPPED_SUBVIEWS}
         testID="transactions-list"
       />
 
@@ -265,7 +311,7 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.colors.background,
     },
     listContent: {
-      padding: theme.spacing.md,
+      padding: LIST_CONTENT_PADDING,
       paddingBottom: theme.spacing.xl * 3,
     },
     listContentEmpty: {

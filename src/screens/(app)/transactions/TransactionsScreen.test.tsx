@@ -35,6 +35,12 @@ interface MockFlatListProps {
   ListFooterComponent?: ReactNode;
 }
 
+interface LayoutEvent {
+  nativeEvent: { layout: { height: number } };
+}
+
+const layoutEvent = (height: number): LayoutEvent => ({ nativeEvent: { layout: { height } } });
+
 vi.mock('expo-router', () => ({
   useRouter: () => ({ push: routerMocks.push }),
   useFocusEffect: (callback: () => void | (() => void)) => {
@@ -73,6 +79,7 @@ vi.mock('react-native', () => ({
       );
     }
   ),
+  Platform: { OS: 'android' },
   Pressable: 'Pressable',
   RefreshControl: 'RefreshControl',
   StyleSheet: { create: <T,>(styles: T) => styles, hairlineWidth: 1 },
@@ -87,13 +94,16 @@ vi.mock('@/src/components/features/TransactionItem', () => ({
   TransactionItem: ({
     transaction,
     onPress,
+    onLayout,
   }: {
     transaction: Transaction;
     onPress: (id: string) => void;
+    onLayout?: (event: LayoutEvent) => void;
   }) =>
     createElement('TransactionItem', {
       testID: `transaction-${transaction.id}`,
       onPress: () => onPress(transaction.id),
+      onLayout,
     }),
 }));
 
@@ -150,6 +160,7 @@ vi.mock('@/src/hooks/useInfiniteTransactions', () => ({
 }));
 
 vi.mock('@/src/theme', () => ({
+  spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, '2xl': 32 },
   useTheme: () => ({
     colors: {
       background: '#f3f3f3',
@@ -265,16 +276,51 @@ describe('TransactionsScreen', () => {
     });
   });
 
-  it('não fornece getItemLayout quando o cabeçalho de filtros varia de altura', () => {
-    hookValue = createHookValue({ items: [transaction('t1')] });
+  it('só fornece getItemLayout depois de medir a linha e o cabeçalho', () => {
+    hookValue = createHookValue({ items: [transaction('t1'), transaction('t2')] });
     const tree = renderScreen();
-    const measuredRow = tree.root.findAll((node) => typeof node.props.onLayout === 'function')[0];
-
-    if (measuredRow) {
-      act(() => measuredRow.props.onLayout({ nativeEvent: { layout: { height: 64 } } }));
-    }
 
     expect(list(tree).props.getItemLayout).toBeUndefined();
+    expect(findByTestId(tree, 'transaction-t2').props.onLayout).toBeUndefined();
+
+    act(() => findByTestId(tree, 'transactions-filters-header').props.onLayout(layoutEvent(96)));
+    expect(list(tree).props.getItemLayout).toBeUndefined();
+
+    act(() => findByTestId(tree, 'transaction-t1').props.onLayout(layoutEvent(76.4)));
+    expect(list(tree).props.getItemLayout).toBeDefined();
+  });
+
+  it('soma o padding do conteúdo e a altura do cabeçalho ao offset de cada item', () => {
+    hookValue = createHookValue({ items: [transaction('t1'), transaction('t2')] });
+    const tree = renderScreen();
+
+    act(() => findByTestId(tree, 'transactions-filters-header').props.onLayout(layoutEvent(96)));
+    act(() => findByTestId(tree, 'transaction-t1').props.onLayout(layoutEvent(76)));
+
+    const getItemLayout = list(tree).props.getItemLayout;
+    expect(getItemLayout(hookValue.items, 0)).toEqual({ length: 76, offset: 108, index: 0 });
+    expect(getItemLayout(hookValue.items, 2)).toEqual({ length: 76, offset: 260, index: 2 });
+  });
+
+  it('recalcula os offsets quando os chips mudam a altura do cabeçalho', () => {
+    hookValue = createHookValue({ items: [transaction('t1')] });
+    const tree = renderScreen();
+
+    act(() => findByTestId(tree, 'transactions-filters-header').props.onLayout(layoutEvent(96)));
+    act(() => findByTestId(tree, 'transaction-t1').props.onLayout(layoutEvent(76)));
+    act(() => findByTestId(tree, 'transactions-filters-header').props.onLayout(layoutEvent(140)));
+
+    expect(list(tree).props.getItemLayout(hookValue.items, 1)).toEqual({
+      length: 76,
+      offset: 228,
+      index: 1,
+    });
+  });
+
+  it('descarta as views fora da tela no Android', () => {
+    const tree = renderScreen();
+
+    expect(list(tree).props.removeClippedSubviews).toBe(true);
   });
 
   it('carrega a próxima página ao chegar no fim e mostra o spinner no rodapé', () => {

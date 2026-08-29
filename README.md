@@ -161,6 +161,8 @@ npx -p firebase-tools firebase emulators:exec --only firestore "npm run test:dom
 
 Esse comando requer Java 21 e executa contra o emulador local, sem usar dados de produção do Firestore.
 
+As notas de performance, com os números antes/depois no Node e no emulador, estão em [docs/perf.md](docs/perf.md).
+
 ## Storybook
 
 O catálogo no dispositivo pode ser iniciado em qualquer uma destas modalidades:

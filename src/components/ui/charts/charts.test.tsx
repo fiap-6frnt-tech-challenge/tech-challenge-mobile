@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { BalancePoint } from '@/src/domain';
 import { ThemeProvider } from '@/src/theme';
 import { BalanceLineChart } from './BalanceLineChart';
 import { CategoryPieChart } from './CategoryPieChart';
@@ -33,6 +34,7 @@ vi.mock('react-native-gifted-charts', () => ({
     createElement('View', {
       testID: 'mock-line-chart',
       accessibilityLabel: `line chart: ${data.length} points`,
+      points: data,
     }),
   PieChart: ({ data }: { data: unknown[] }) =>
     createElement('View', {
@@ -103,6 +105,35 @@ describe('dashboard charts', () => {
         /evolução do saldo em 9 pontos/i.test(node.props.accessibilityLabel)
     );
     expect(a11yNode).toBeTruthy();
+  });
+
+  it('reamostra a linha do saldo acima do limite de pontos plotados', () => {
+    const longSeries: BalancePoint[] = Array.from({ length: 320 }, (_, index) => ({
+      date: `2026-03-${String((index % 28) + 1).padStart(2, '0')}`,
+      balance: 1000 + index * 7,
+    }));
+
+    const tree = renderChart(<BalanceLineChart data={longSeries} testID="long-line-chart" />);
+    const chart = tree.root.findByProps({ testID: 'mock-line-chart' });
+    const plotted = chart.props.points as { value: number }[];
+
+    expect(plotted).toHaveLength(60);
+    expect(plotted[0].value).toBe(longSeries[0].balance);
+    expect(plotted.at(-1)?.value).toBe(longSeries.at(-1)?.balance);
+
+    const a11yNode = tree.root.find(
+      (node) =>
+        node.props.accessibilityLabel &&
+        /evolução do saldo em 320 pontos/i.test(node.props.accessibilityLabel)
+    );
+    expect(a11yNode).toBeTruthy();
+  });
+
+  it('mantém todos os pontos quando a série cabe no limite', () => {
+    const tree = renderChart(<BalanceLineChart data={balanceFixture} testID="short-line-chart" />);
+    const chart = tree.root.findByProps({ testID: 'mock-line-chart' });
+
+    expect(chart.props.points).toHaveLength(balanceFixture.length);
   });
 
   it('renders chart empty states instead of chart primitives', () => {

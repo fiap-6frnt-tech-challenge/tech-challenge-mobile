@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { BarChart, type barDataItem } from 'react-native-gifted-charts';
 import { useTheme, type Theme } from '@/src/theme';
@@ -30,7 +30,7 @@ export interface ExpenseBarChartProps {
   testID?: string;
 }
 
-export function ExpenseBarChart({
+export const ExpenseBarChart = memo(function ExpenseBarChart({
   data,
   title,
   height = 200,
@@ -133,7 +133,7 @@ export function ExpenseBarChart({
       />
     </ChartFrame>
   );
-}
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({

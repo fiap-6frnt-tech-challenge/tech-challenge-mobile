@@ -92,3 +92,7 @@ export const CATEGORIES = [
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
 export type Category = (typeof CATEGORIES)[number];
+
+export const CATEGORY_LABEL_MAP = Object.fromEntries(
+  CATEGORIES.map((category) => [category.id, category.label])
+) as Record<CategoryId, string>;

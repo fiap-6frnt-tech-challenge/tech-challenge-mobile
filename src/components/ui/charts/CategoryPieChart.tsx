@@ -1,18 +1,14 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { PieChart, type pieDataItem } from 'react-native-gifted-charts';
 import { Text } from '@/src/components/ui/Text';
-import { CATEGORIES, type CategoryId } from '@/src/domain/categories';
+import { CATEGORY_LABEL_MAP } from '@/src/domain/categories';
 import type { CategoryAggregate } from '@/src/domain/transactions';
 import { useTheme, type Theme } from '@/src/theme';
 import { ChartFrame } from './ChartFrame';
 import { ChartLegend, type ChartLegendItem } from './ChartLegend';
 import { formatCurrency } from './format';
 import { useChartWidth } from './useChartWidth';
-
-const CATEGORY_LABELS = Object.fromEntries(
-  CATEGORIES.map((category) => [category.id, category.label])
-) as Record<CategoryId, string>;
 
 export interface CategoryPieChartProps {
   data: CategoryAggregate[];
@@ -23,7 +19,7 @@ export interface CategoryPieChartProps {
   testID?: string;
 }
 
-export function CategoryPieChart({
+export const CategoryPieChart = memo(function CategoryPieChart({
   data,
   title,
   radius,
@@ -46,7 +42,7 @@ export function CategoryPieChart({
     }));
     const legendItems: ChartLegendItem[] = ordered.map((item) => ({
       key: item.category,
-      label: CATEGORY_LABELS[item.category] ?? item.category,
+      label: CATEGORY_LABEL_MAP[item.category] ?? item.category,
       color: theme.charts.categories[item.category],
       value: formatCurrency(item.total),
       share: `${Math.round((item.total / sum) * 100)}%`,
@@ -99,7 +95,7 @@ export function CategoryPieChart({
       </View>
     </ChartFrame>
   );
-}
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({

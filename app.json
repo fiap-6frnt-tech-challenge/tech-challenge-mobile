@@ -28,7 +28,8 @@
       ],
       "expo-document-picker",
       "./withAndroidAccentColor.js",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
