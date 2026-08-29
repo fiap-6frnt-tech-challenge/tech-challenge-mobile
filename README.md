@@ -116,3 +116,80 @@ As operações de criação e atualização gravam `descriptionNormalized`. As c
 Os dados do Firestore ficam em `users/{uid}/transactions/{transactionId}`; apenas o `uid` autenticado correspondente pode ler ou escrever. Os comprovantes no Storage ficam em `receipts/{uid}/{transactionId}/{fileName}`; apenas o usuário autenticado correspondente pode ler, criar, atualizar ou excluir.
 
 As rules de upload aceitam JPEG, PNG, WEBP ou PDF com no máximo 5 MB.
+
+## Instalação e execução
+
+Depois de configurar o Firebase e preencher o `.env`, clone o projeto, instale as dependências e inicie o Expo:
+
+```bash
+git clone https://github.com/fiap-6frnt-tech-challenge/tech-challenge-mobile.git
+cd tech-challenge-mobile
+cp .env.example .env
+npm ci
+npm start
+```
+
+No terminal do Expo, pressione `a` para abrir no Android, `i` para abrir no iOS e `r` para recarregar o app. Para gerar e executar diretamente o native development build, use:
+
+```bash
+npm run ios
+npm run android
+```
+
+Uma versão da Expo Go da App Store incompatível com o Expo SDK 56 não abre o projeto. Nesse caso, use a Expo Go compatível com o SDK ou o simulador/emulador com o native development build gerado pelos comandos nativos.
+
+## Testes e qualidade
+
+Para uma verificação local rápida, execute:
+
+```bash
+npm test
+npm run lint
+npx tsc --noEmit
+```
+
+O gate completo usado pelo CI para as rules do Firestore e a suíte de domínio é:
+
+```bash
+npx -p firebase-tools firebase emulators:exec --only firestore "npm run test:domain"
+```
+
+Esse comando requer Java 21 e executa contra o emulador local, sem usar dados de produção do Firestore.
+
+## Storybook
+
+O catálogo no dispositivo pode ser iniciado em qualquer uma destas modalidades:
+
+```bash
+npm run storybook
+npm run storybook:ios
+npm run storybook:android
+```
+
+Esses scripts definem `EXPO_PUBLIC_STORYBOOK=true`. O `metro.config.js` inclui as stories somente nesse modo, e o catálogo no dispositivo é iniciado em `.rnstorybook/index.ts`. No fluxo normal, `npm start` mantém o Storybook desabilitado por meio do `.env`.
+
+## Build Android
+
+Autentique-se no EAS e crie o build de preview para Android:
+
+```bash
+npx eas-cli login
+npx eas-cli build --platform android --profile preview
+```
+
+O perfil `preview` em `eas.json` usa distribuição interna. Os valores Firebase `EXPO_PUBLIC_*` também precisam existir no ambiente EAS usado pelo build. A S4-03 é responsável por validar e instalar o APK resultante.
+
+## Entregáveis
+
+- [Builds Android (EAS)](https://expo.dev/accounts/bytebanks-team/projects/bytebank-mobile/builds)
+- Vídeo demonstrativo: enquanto a S4-06 estiver incompleta, consulte [docs/sprint-4-polish-deploy/06-demo-video.md](docs/sprint-4-polish-deploy/06-demo-video.md). Quando o vídeo existir, a S4-06 substituirá esta nota pela URL pública imutável.
+
+## Solução de problemas
+
+- `EXPO_PUBLIC_*` ausente: copie e preencha o `.env`, depois reinicie o Metro com `npx expo start --clear`.
+- `auth/operation-not-allowed` ou credencial inválida: confirme o provedor Email/Password e as credenciais de teste.
+- Índice ausente no Firestore: publique `firestore.indexes.json`, aguarde a criação do índice e tente novamente.
+- `storage/unauthorized`: publique `storage.rules` e confirme que o caminho do comprovante usa o `uid` autenticado.
+- Permissão de câmera ou galeria negada: habilite as permissões do Bytebank nas configurações do dispositivo e tente selecionar o arquivo novamente.
+- Persistência de sessão divergente: limpe os dados do app ou reinstale o development build e faça login de novo; a autenticação usa persistência com AsyncStorage.
+- Incompatibilidade com Expo Go: use uma Expo Go compatível com o SDK ou `npm run ios`/`npm run android`.
