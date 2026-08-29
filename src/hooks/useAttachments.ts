@@ -88,9 +88,9 @@ export function useAttachments({
 }: UseAttachmentsOptions = {}): UseAttachmentsResult {
   const [drafts, setDrafts] = useState<AttachmentDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [removing, setRemoving] = useState(false);
 
   const draftsRef = useRef<AttachmentDraft[]>([]);
+  const removedPersistedRef = useRef<Map<string, Attachment>>(new Map());
   const persistedList = useMemo(() => persisted ?? [], [persisted]);
 
   const updateDrafts = useCallback((updater: (current: AttachmentDraft[]) => AttachmentDraft[]) => {
@@ -108,10 +108,18 @@ export function useAttachments({
   );
 
   const items = useMemo<AttachmentItem[]>(() => {
-    const persistedIds = new Set(persistedList.map((attachment) => attachment.id));
+    removedPersistedRef.current.forEach((_attachment, id) => {
+      if (!persistedList.some((attachment) => attachment.id === id)) {
+        removedPersistedRef.current.delete(id);
+      }
+    });
+
+    const removedIds = new Set(removedPersistedRef.current.keys());
+    const visiblePersisted = persistedList.filter((attachment) => !removedIds.has(attachment.id));
+    const persistedIds = new Set(visiblePersisted.map((attachment) => attachment.id));
 
     return [
-      ...persistedList.map(toItem),
+      ...visiblePersisted.map(toItem),
       ...drafts.filter((draft) => !persistedIds.has(draft.id)).map(draftToItem),
     ];
   }, [drafts, persistedList]);
@@ -200,7 +208,10 @@ export function useAttachments({
       let uploaded: Attachment | undefined;
       try {
         uploaded = await uploadDraft(txId, draft);
-        await onPersist?.(txId, [...persistedList, uploaded]);
+        await onPersist?.(txId, [
+          ...persistedList.filter((attachment) => !removedPersistedRef.current.has(attachment.id)),
+          uploaded,
+        ]);
       } catch (uploadError) {
         const failedPersist = uploaded !== undefined;
         if (uploaded) await discardUploads([uploaded.path]);
@@ -233,7 +244,8 @@ export function useAttachments({
   const commit = useCallback(
     async (targetTxId: string) => {
       const queued = draftsRef.current.filter((draft) => !draft.path);
-      if (queued.length === 0) return;
+      const removed = [...removedPersistedRef.current.values()];
+      if (queued.length === 0 && removed.length === 0) return;
 
       if (!uid) {
         failDrafts(queued, SESSION_ERROR);
@@ -254,10 +266,17 @@ export function useAttachments({
       }
 
       try {
-        await onPersist?.(targetTxId, [...persistedList, ...uploaded]);
+        await onPersist?.(targetTxId, [
+          ...persistedList.filter((attachment) => !removedPersistedRef.current.has(attachment.id)),
+          ...uploaded,
+        ]);
+
+        // The physical deletion only happens as part of the save operation.
+        await Promise.all(removed.map((attachment) => onRemovePersisted?.(attachment)));
       } catch (persistError) {
         await discardUploads(uploaded.map((attachment) => attachment.path));
-        failDrafts(queued, PERSIST_ERROR);
+        if (removed.length > 0 && uploaded.length === 0) setError(REMOVE_ERROR);
+        else failDrafts(queued, PERSIST_ERROR);
         throw persistError;
       }
 
@@ -278,7 +297,16 @@ export function useAttachments({
         })
       );
     },
-    [discardUploads, failDrafts, onPersist, persistedList, uid, updateDrafts, uploadDraft]
+    [
+      discardUploads,
+      failDrafts,
+      onPersist,
+      onRemovePersisted,
+      persistedList,
+      uid,
+      updateDrafts,
+      uploadDraft,
+    ]
   );
 
   const remove = useCallback(
@@ -294,17 +322,11 @@ export function useAttachments({
         return;
       }
 
-      setRemoving(true);
-      try {
-        await onRemovePersisted?.(stored);
-        updateDrafts((current) => current.filter((entry) => entry.id !== item.id));
-      } catch {
-        setError(REMOVE_ERROR);
-      } finally {
-        setRemoving(false);
-      }
+      // Persisted files are only deleted when commit() runs on form submit.
+      removedPersistedRef.current.set(stored.id, stored);
+      updateDrafts((current) => current.filter((entry) => entry.id !== item.id));
     },
-    [discardUploads, onRemovePersisted, persistedList, updateDrafts]
+    [discardUploads, persistedList, updateDrafts]
   );
 
   const uploading = drafts.some((draft) => draft.status === 'uploading');
@@ -312,7 +334,7 @@ export function useAttachments({
   return {
     items,
     error,
-    busy: uploading || removing,
+    busy: uploading,
     canAdd: items.length < MAX_TRANSACTION_ATTACHMENTS,
     pendingCount: drafts.filter((draft) => !draft.path).length,
     add,

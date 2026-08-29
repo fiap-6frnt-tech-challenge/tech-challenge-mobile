@@ -341,7 +341,7 @@ describe('useAttachments removal', () => {
     expect(current().canAdd).toBe(true);
   });
 
-  it('delegates a persisted attachment so Storage and Firestore stay in step', async () => {
+  it('only marks a persisted attachment for removal until commit', async () => {
     const onRemovePersisted = vi.fn().mockResolvedValue(undefined);
     renderHook({ uid: 'user-1', txId: 'tx-9', persisted: [storedAttachment], onRemovePersisted });
 
@@ -349,11 +349,19 @@ describe('useAttachments removal', () => {
       await current().remove(current().items[0]);
     });
 
-    expect(onRemovePersisted).toHaveBeenCalledWith(storedAttachment);
+    expect(onRemovePersisted).not.toHaveBeenCalled();
+    expect(storageMocks.deleteReceipt).not.toHaveBeenCalled();
+    expect(current().items).toHaveLength(0);
     expect(current().error).toBeNull();
+
+    await act(async () => {
+      await current().commit('tx-9');
+    });
+
+    expect(onRemovePersisted).toHaveBeenCalledWith(storedAttachment);
   });
 
-  it('reports a failed removal without dropping the attachment from the list', async () => {
+  it('keeps a pending removal hidden when commit fails', async () => {
     const onRemovePersisted = vi.fn().mockRejectedValue(new Error('permission denied'));
     renderHook({ uid: 'user-1', txId: 'tx-9', persisted: [storedAttachment], onRemovePersisted });
 
@@ -361,7 +369,11 @@ describe('useAttachments removal', () => {
       await current().remove(current().items[0]);
     });
 
+    await act(async () => {
+      await current().commit('tx-9').catch(() => undefined);
+    });
+
     expect(current().error).toBe(REMOVE_ERROR);
-    expect(current().items).toHaveLength(1);
+    expect(current().items).toHaveLength(0);
   });
 });

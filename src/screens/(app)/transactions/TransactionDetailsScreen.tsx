@@ -10,13 +10,14 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useTransactions } from '@/src/contexts/TransactionContext';
 import type { TransactionFormValues } from '@/src/domain';
 import { useAttachments } from '@/src/hooks/useAttachments';
+import { storageService } from '@/src/services/storage.service';
 import { useTheme, type Theme } from '@/src/theme';
 
 export default function TransactionDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { items, loading, error, refresh, update, remove, removeAttachment } = useTransactions();
+  const { items, loading, error, refresh, update, remove } = useTransactions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [deleting, setDeleting] = useState(false);
@@ -26,13 +27,9 @@ export default function TransactionDetailsScreen() {
 
   const attachments = useAttachments({
     uid: user?.uid,
-    txId: transaction?.id,
     persisted: transaction?.attachments,
     onPersist: (txId, list) => update(txId, { attachments: list }),
-    onRemovePersisted: async (attachment) => {
-      if (!transaction) return;
-      await removeAttachment(transaction.id, attachment.id);
-    },
+    onRemovePersisted: (attachment) => storageService.deleteReceipt(attachment.path),
   });
 
   const goBackToList = () => {
@@ -48,6 +45,7 @@ export default function TransactionDetailsScreen() {
     description,
   }: TransactionFormValues) => {
     if (!transaction) return;
+    await attachments.commit(transaction.id);
     await update(transaction.id, { type, category, amount, date, description });
     goBackToList();
   };

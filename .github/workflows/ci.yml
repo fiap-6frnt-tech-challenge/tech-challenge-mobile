@@ -17,4 +17,4 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
-      - run: npx -p firebase-tools firebase emulators:exec --only firestore "npm run test:domain"
+      - run: npx -p firebase-tools firebase emulators:exec --only firestore,storage "npm run test:domain"
