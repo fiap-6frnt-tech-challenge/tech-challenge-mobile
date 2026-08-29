@@ -112,3 +112,7 @@ As operações de criação e atualização gravam `descriptionNormalized`. As c
 `firebase deploy --only firestore:indexes` publica essas definições. Se uma futura forma de consulta exigir um index ausente, o erro do Firestore ainda pode apresentar um link direto para o Console.
 
 ## Segurança
+
+Os dados do Firestore ficam em `users/{uid}/transactions/{transactionId}`; apenas o `uid` autenticado correspondente pode ler ou escrever. Os comprovantes no Storage ficam em `receipts/{uid}/{transactionId}/{fileName}`; apenas o usuário autenticado correspondente pode ler, criar, atualizar ou excluir.
+
+As rules de upload aceitam JPEG, PNG, WEBP ou PDF com no máximo 5 MB.
