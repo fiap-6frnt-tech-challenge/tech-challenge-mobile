@@ -45,7 +45,7 @@ Entregável obrigatório: README com **configuração do Firebase**, dependênci
 - [x] Comandos de deploy das rules documentados
 - [x] Índices do Firestore listados
 
-Evidência (2026-08-29): `npm run lint`, `npx tsc --noEmit`, `git diff --check` e o contrato dos scripts documentados passaram. Em clone separado criado com `git clone --no-local`, `npm ci`, `npm start`, `npm run ios`, `npm run storybook` e `npm test` passaram; o app foi instalado no Simulador iOS. O fluxo autenticado de transação/comprovante não foi concluído nesta sessão e o gate do emulador Firestore ficou bloqueado porque o host possui apenas Java 17 (o `firebase-tools` atual exige Java 21), portanto a validação em máquina limpa permanece aberta.
+Evidência (2026-08-29): `npm run lint`, `npx tsc --noEmit`, `git diff --check` e o contrato dos scripts documentados passaram. Em clone separado criado com `git clone --no-local`, `npm ci`, `npm start`, `npm run ios`, `npm run storybook` e `npm test` passaram; o app foi instalado no Simulador iOS. O fluxo autenticado de transação/comprovante não foi concluído nesta sessão; o gate do emulador Firestore/domínio passou com Java 21, com 25 arquivos e 284 testes aprovados. A validação em máquina limpa permanece aberta por causa do fluxo de interface não concluído.
 
 ## Gotchas
 
