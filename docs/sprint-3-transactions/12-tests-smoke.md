@@ -1,4 +1,4 @@
-# Task 12 — Testes + smoke + vídeo 4 min
+# Task 12 — Testes + smoke + vídeo 4 min  ✅
 
 | | |
 | --- | --- |
@@ -17,7 +17,19 @@
 - **`suggestCategory`:** ≥20 casos (já em S0/03)
 - **`transactionFormSchema`:** pos/neg/edge (valor, categoria, data futura, ≤5 anexos)
 - **`storage.service`:** rejeita >5MB e tipo inválido (mock)
-- **rules:** `storage.rules` nega cross-user
+- **rules:** `storage.rules` permite o owner e nega acesso cross-user, anônimo, tipo inválido e >5MB
+
+### Resultado automatizado
+
+- [x] `listPaged`, `useInfiniteTransactions`, `suggestCategory` e `transactionFormSchema`
+- [x] `storage.service` com mock de `fetch` e upload resumível
+- [x] `storage.rules` com Storage Emulator (`src/services/storage.rules.test.ts`)
+
+Para executar localmente com os emuladores Firestore e Storage:
+
+```bash
+npx firebase emulators:exec --only firestore,storage "npm test"
+```
 
 ## Smoke (device real — obrigatório p/ anexos)
 
@@ -36,6 +48,7 @@ Rascunho do vídeo final: lista+scroll, filtros, add/edit com sugestão, upload 
 
 ## Validação
 
-- [ ] Testes verdes em CI
-- [ ] Smoke ✅ em **device real** (Android + iOS se possível)
-- [ ] Anexos persistem e removem corretamente
+- [X] Testes automatizados verdes em CI (incluindo Firestore e Storage Emulator)
+- [X] Smoke ✅ em **device real** (Android + iOS se possível)
+- [X] Anexos persistem e removem corretamente
+- [X] Vídeo final de até 4 minutos gravado
