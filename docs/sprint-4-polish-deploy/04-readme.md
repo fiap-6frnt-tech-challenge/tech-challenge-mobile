@@ -1,12 +1,12 @@
 # Task 04 — README final
 
-| | |
-| --- | --- |
-| **Sprint** | [Sprint 4](./README.md) |
-| **Owner** | Dev 1 (Firebase & Data) |
-| **Duração** | 1 dia |
-| **Branch** | `dev1-fb/readme` |
-| **Depende de** | Sprint 3 |
+|                |                         |
+| -------------- | ----------------------- |
+| **Sprint**     | [Sprint 4](./README.md) |
+| **Owner**      | Dev 1 (Firebase & Data) |
+| **Duração**    | 1 dia                   |
+| **Branch**     | `dev1-fb/readme`        |
+| **Depende de** | Sprint 3                |
 
 ---
 
@@ -41,9 +41,11 @@ Entregável obrigatório: README com **configuração do Firebase**, dependênci
 ## Validação
 
 - [ ] Um dev externo (ou colega em máquina limpa) consegue rodar seguindo só o README
-- [ ] `.env.example` presente e completo
-- [ ] Comandos de deploy das rules documentados
-- [ ] Índices do Firestore listados
+- [x] `.env.example` presente e completo
+- [x] Comandos de deploy das rules documentados
+- [x] Índices do Firestore listados
+
+Evidência (2026-08-29): `npm run lint`, `npx tsc --noEmit`, `git diff --check` e o contrato dos scripts documentados passaram. Em clone separado criado com `git clone --no-local`, `npm ci`, `npm start`, `npm run ios`, `npm run storybook` e `npm test` passaram; o app foi instalado no Simulador iOS. O fluxo autenticado de transação/comprovante não foi concluído nesta sessão e o gate do emulador Firestore ficou bloqueado porque o host possui apenas Java 17 (o `firebase-tools` atual exige Java 21), portanto a validação em máquina limpa permanece aberta.
 
 ## Gotchas
 
