@@ -88,6 +88,7 @@ export function useAttachments({
 }: UseAttachmentsOptions = {}): UseAttachmentsResult {
   const [drafts, setDrafts] = useState<AttachmentDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [removedPersisted, setRemovedPersisted] = useState<Map<string, Attachment>>(new Map());
 
   const draftsRef = useRef<AttachmentDraft[]>([]);
   const removedPersistedRef = useRef<Map<string, Attachment>>(new Map());
@@ -108,13 +109,7 @@ export function useAttachments({
   );
 
   const items = useMemo<AttachmentItem[]>(() => {
-    removedPersistedRef.current.forEach((_attachment, id) => {
-      if (!persistedList.some((attachment) => attachment.id === id)) {
-        removedPersistedRef.current.delete(id);
-      }
-    });
-
-    const removedIds = new Set(removedPersistedRef.current.keys());
+    const removedIds = new Set(removedPersisted.keys());
     const visiblePersisted = persistedList.filter((attachment) => !removedIds.has(attachment.id));
     const persistedIds = new Set(visiblePersisted.map((attachment) => attachment.id));
 
@@ -122,7 +117,7 @@ export function useAttachments({
       ...visiblePersisted.map(toItem),
       ...drafts.filter((draft) => !persistedIds.has(draft.id)).map(draftToItem),
     ];
-  }, [drafts, persistedList]);
+  }, [drafts, persistedList, removedPersisted]);
 
   const discardUploads = useCallback(async (paths: string[]) => {
     await Promise.all(
@@ -324,6 +319,7 @@ export function useAttachments({
 
       // Persisted files are only deleted when commit() runs on form submit.
       removedPersistedRef.current.set(stored.id, stored);
+      setRemovedPersisted(new Map(removedPersistedRef.current));
       updateDrafts((current) => current.filter((entry) => entry.id !== item.id));
     },
     [discardUploads, persistedList, updateDrafts]

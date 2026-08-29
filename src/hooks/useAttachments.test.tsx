@@ -370,7 +370,9 @@ describe('useAttachments removal', () => {
     });
 
     await act(async () => {
-      await current().commit('tx-9').catch(() => undefined);
+      await current()
+        .commit('tx-9')
+        .catch(() => undefined);
     });
 
     expect(current().error).toBe(REMOVE_ERROR);
