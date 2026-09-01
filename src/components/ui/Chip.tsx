@@ -126,6 +126,12 @@ function createStyles(theme: Theme) {
     pressed: { opacity: 0.7 },
     label: { color: theme.colors.text, flexShrink: 1 },
     labelSelected: { color: theme.colors.primary, fontWeight: '600' },
-    removeButton: { alignItems: 'center', justifyContent: 'center' },
+    removeButton: {
+      width: 32,
+      height: 32,
+      marginVertical: -2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 }

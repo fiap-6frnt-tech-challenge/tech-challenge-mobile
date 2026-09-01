@@ -329,6 +329,8 @@ function createStyles(theme: Theme) {
     previewClose: {
       minWidth: 44,
       minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
       position: 'absolute',
       top: theme.spacing['2xl'],
       right: theme.spacing.lg,
