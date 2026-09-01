@@ -145,6 +145,7 @@ function createStyles(theme: Theme) {
       borderRadius: theme.radius.default,
     },
     segment: {
+      minHeight: 44,
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',

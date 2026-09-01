@@ -59,7 +59,7 @@ export function Chip({
         <Pressable
           onPress={disabled ? undefined : onRemove}
           disabled={disabled}
-          hitSlop={theme.spacing.sm}
+          hitSlop={15}
           accessibilityRole="button"
           accessibilityLabel={removeAccessibilityLabel ?? `Remover ${label}`}
           accessibilityState={{ disabled }}
@@ -106,6 +106,7 @@ export function Chip({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     chip: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'flex-start',

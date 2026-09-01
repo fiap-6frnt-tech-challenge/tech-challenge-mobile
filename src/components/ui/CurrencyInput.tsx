@@ -88,6 +88,7 @@ function createStyles(theme: Theme) {
       fontWeight: '600',
     },
     input: {
+      minHeight: 44,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
       borderRadius: theme.radius.default,

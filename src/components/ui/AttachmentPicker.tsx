@@ -155,6 +155,7 @@ export function AttachmentPicker({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     trigger: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -183,6 +184,7 @@ function createStyles(theme: Theme) {
     },
     sheetTitle: { color: theme.colors.text, marginBottom: theme.spacing.md },
     option: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.md,

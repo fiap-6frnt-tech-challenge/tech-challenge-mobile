@@ -81,6 +81,7 @@ export function Button({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     base: {
+      minHeight: 44,
       paddingVertical: theme.spacing.md,
       paddingHorizontal: theme.spacing.lg,
       borderRadius: theme.radius.default,

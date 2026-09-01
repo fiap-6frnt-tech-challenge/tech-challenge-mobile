@@ -312,7 +312,13 @@ function createStyles(theme: Theme) {
     },
     progressFill: { height: '100%', borderRadius: 2, backgroundColor: theme.colors.primary },
     percent: { minWidth: 36, textAlign: 'right' },
-    removeButton: { alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xs },
+    removeButton: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: theme.spacing.xs,
+    },
     previewBackdrop: {
       flex: 1,
       alignItems: 'center',
@@ -321,6 +327,8 @@ function createStyles(theme: Theme) {
     },
     previewImage: { width: '100%', height: '80%' },
     previewClose: {
+      minWidth: 44,
+      minHeight: 44,
       position: 'absolute',
       top: theme.spacing['2xl'],
       right: theme.spacing.lg,

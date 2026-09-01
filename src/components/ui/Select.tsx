@@ -138,6 +138,7 @@ function createStyles(theme: Theme) {
       fontWeight: '600',
     },
     field: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -173,6 +174,7 @@ function createStyles(theme: Theme) {
       marginBottom: theme.spacing.md,
     },
     option: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
