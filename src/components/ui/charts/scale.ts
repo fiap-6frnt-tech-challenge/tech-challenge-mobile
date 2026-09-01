@@ -53,11 +53,17 @@ export interface BarGeometryLimits {
   minGroupSpacing: number;
 }
 
-export function labelPositions(length: number, maxLabels: number): Set<number> {
-  if (length <= 1) return new Set([0]);
+export function evenPositions(length: number, maxPositions: number): number[] {
+  if (length <= 1) return [0];
 
-  const count = Math.min(length, maxLabels);
-  return new Set(
-    Array.from({ length: count }, (_, index) => Math.round((index * (length - 1)) / (count - 1)))
+  const count = Math.min(length, maxPositions);
+  if (count <= 1) return [0];
+
+  return Array.from({ length: count }, (_, index) =>
+    Math.round((index * (length - 1)) / (count - 1))
   );
+}
+
+export function labelPositions(length: number, maxLabels: number): Set<number> {
+  return new Set(evenPositions(length, maxLabels));
 }

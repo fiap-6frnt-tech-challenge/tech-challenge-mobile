@@ -1,6 +1,7 @@
 import {
   createElement,
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useSyncExternalStore,
   type ElementType,
@@ -16,7 +17,7 @@ import DashboardScreen from './DashboardScreen';
 type DashboardData = ReturnType<typeof useDashboardData>;
 
 const routerMocks = vi.hoisted(() => ({ push: vi.fn() }));
-const motionMocks = vi.hoisted(() => ({ replay: vi.fn() }));
+const motionMocks = vi.hoisted(() => ({ replay: vi.fn(), autoCompleteEntrance: true }));
 const dashboardStore = vi.hoisted(() => ({ listeners: new Set<() => void>() }));
 const nativeMocks = vi.hoisted(() => ({
   announceForAccessibility: vi.fn(),
@@ -108,8 +109,20 @@ vi.mock('@/src/components/ui/charts', () => ({
 }));
 
 vi.mock('@/src/components/ui/motion', () => ({
-  AnimatedSection: ({ children, ...props }: { children?: ReactNode }) =>
-    createElement('AnimatedSection', props, children),
+  AnimatedSection: ({
+    children,
+    onAnimationComplete,
+    ...props
+  }: {
+    children?: ReactNode;
+    onAnimationComplete?: () => void;
+  }) => {
+    useEffect(() => {
+      if (motionMocks.autoCompleteEntrance) onAnimationComplete?.();
+    }, [onAnimationComplete]);
+
+    return createElement('AnimatedSection', props, children);
+  },
   AnimatedSectionGroup: forwardRef<AnimatedSectionGroupHandle, { children: ReactNode }>(
     ({ children }, ref) => {
       useImperativeHandle(ref, () => ({ replay: motionMocks.replay }), []);
@@ -229,6 +242,7 @@ beforeEach(() => {
   dashboardData = createDashboardData();
   dashboardStore.listeners.clear();
   nativeMocks.platformOS = 'android';
+  motionMocks.autoCompleteEntrance = true;
   vi.clearAllMocks();
 });
 
@@ -247,6 +261,26 @@ describe('DashboardScreen', () => {
 
     expect(findByTestId(tree, 'dashboard-skeleton')).toBeDefined();
     expect(findAllByTestId(tree, 'dashboard-balance')).toHaveLength(0);
+  });
+
+  it('mantém o skeleton sobre o conteúdo até as seções terminarem de entrar', () => {
+    motionMocks.autoCompleteEntrance = false;
+    dashboardData = createDashboardData();
+
+    const tree = renderScreen();
+
+    expect(findByTestId(tree, 'dashboard-entrance-skeleton')).toBeDefined();
+    expect(findByTestId(tree, 'dashboard-entrance-skeleton').props.pointerEvents).toBe('none');
+    expectDashboardContent(tree);
+  });
+
+  it('remove o skeleton quando a última seção termina de entrar', () => {
+    dashboardData = createDashboardData();
+
+    const tree = renderScreen();
+
+    expect(findAllByTestId(tree, 'dashboard-entrance-skeleton')).toHaveLength(0);
+    expectDashboardContent(tree);
   });
 
   it('routes the empty-state action to transaction creation', () => {

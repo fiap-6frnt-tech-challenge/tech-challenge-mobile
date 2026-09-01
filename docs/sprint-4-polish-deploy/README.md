@@ -23,7 +23,7 @@
 | #   | Status | Task                                                                   | Owner | Duração | Arquivo                                                  |
 | --- | ------ | ---------------------------------------------------------------------- | ----- | ------- | -------------------------------------------------------- |
 | 01  | ⏳     | Auditoria de acessibilidade                                            | Dev 2 | 1.5 dia | [01-accessibility-audit.md](./01-accessibility-audit.md) |
-| 02  | ⏳     | Performance (FlatList, memo, imagens, cold start)                      | Dev 3 | 1.5 dia | [02-performance.md](./02-performance.md)                 |
+| 02  | 🟢     | Performance (FlatList, memo, imagens, cold start)                      | Dev 3 | 1.5 dia | [02-performance.md](./02-performance.md)                 |
 | 03  | ⏳     | EAS Build config + APK Android                                         | Dev 1 | 1.5 dia | [03-eas-build.md](./03-eas-build.md)                     |
 | 04  | 🟢     | README final: Firebase, `.env`, deps, Storybook, busca e passos locais | Dev 1 | 1 dia   | [04-readme.md](./04-readme.md)                           |
 | 05  | ⏳     | E2E/smoke dos fluxos críticos                                          | Dev 3 | 1 dia   | [05-e2e.md](./05-e2e.md)                                 |

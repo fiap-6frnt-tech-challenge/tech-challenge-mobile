@@ -1,4 +1,4 @@
-import { BADGE_LABEL_MAP, CATEGORIES, type CategoryId } from '@/src/domain';
+import { BADGE_LABEL_MAP, CATEGORY_LABEL_MAP, type CategoryId } from '@/src/domain';
 import type { TxFilter } from '@/src/services/transactions.service';
 
 export type StructuredTransactionFilter = Omit<TxFilter, 'search'>;
@@ -60,8 +60,10 @@ export function getActiveTransactionFilterChips(filter: TxFilter): ActiveTransac
 
   if (filter.type) chips.push({ key: 'type', label: BADGE_LABEL_MAP[filter.type] });
   for (const categoryId of filter.categories ?? []) {
-    const label = CATEGORIES.find(({ id }) => id === categoryId)?.label ?? categoryId;
-    chips.push({ key: `category:${categoryId}`, label });
+    chips.push({
+      key: `category:${categoryId}`,
+      label: CATEGORY_LABEL_MAP[categoryId] ?? categoryId,
+    });
   }
   if (filter.dateFrom) {
     chips.push({ key: 'dateFrom', label: `De ${formatDate(filter.dateFrom)}` });

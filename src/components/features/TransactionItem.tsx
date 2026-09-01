@@ -1,11 +1,11 @@
 import { memo, useMemo, useState } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, type LayoutChangeEvent } from 'react-native';
 import { useTheme, type Theme } from '@/src/theme';
 import { Card } from '@/src/components/ui/Card';
 import { Text } from '@/src/components/ui/Text';
 import { formatBRL } from '@/src/components/ui/currency';
 import { BADGE_LABEL_MAP, TRANSACTION_TYPE } from '@/src/domain/constants';
-import { CATEGORIES } from '@/src/domain/categories';
+import { CATEGORY_LABEL_MAP } from '@/src/domain/categories';
 import type { Transaction } from '@/src/domain/transaction';
 import {
   Utensils,
@@ -40,11 +40,13 @@ function formatDisplayDate(iso?: string): string {
 export interface TransactionItemProps {
   transaction: Transaction;
   onPress: (id: string) => void;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 export const TransactionItem = memo(function TransactionItem({
   transaction,
   onPress,
+  onLayout,
 }: TransactionItemProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -54,8 +56,7 @@ export const TransactionItem = memo(function TransactionItem({
 
   const CategoryIcon = CATEGORY_ICON_MAP[category] || CircleEllipsis;
   const typeLabel = BADGE_LABEL_MAP[type];
-  const categoryItem = CATEGORIES.find((c) => c.id === category);
-  const categoryLabel = categoryItem?.label || 'Outros';
+  const categoryLabel = CATEGORY_LABEL_MAP[category] || 'Outros';
 
   const badgeColors = useMemo(() => {
     switch (type) {
@@ -100,6 +101,7 @@ export const TransactionItem = memo(function TransactionItem({
       onPress={() => onPress(id)}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
+      onLayout={onLayout}
       accessibilityRole="button"
       accessibilityLabel={accessibilityText}
       style={[pressed && styles.pressed]}>

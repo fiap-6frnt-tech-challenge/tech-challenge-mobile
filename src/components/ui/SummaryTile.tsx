@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme, type Theme } from '@/src/theme';
@@ -26,7 +26,7 @@ export interface SummaryTileProps {
   testID?: string;
 }
 
-export function SummaryTile({
+export const SummaryTile = memo(function SummaryTile({
   label,
   value,
   tone,
@@ -83,7 +83,7 @@ export function SummaryTile({
       ) : null}
     </Card>
   );
-}
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({

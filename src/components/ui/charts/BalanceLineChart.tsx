@@ -1,17 +1,18 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { LineChart, type lineDataItem } from 'react-native-gifted-charts';
 import type { BalancePoint } from '@/src/domain';
 import { useTheme, type Theme } from '@/src/theme';
 import { ChartFrame } from './ChartFrame';
 import { axisLabels, formatCurrency, formatDayFull, formatDayShort } from './format';
-import { buildAxisScale, labelPositions } from './scale';
+import { buildAxisScale, evenPositions, labelPositions } from './scale';
 import { useChartWidth } from './useChartWidth';
 
 const SECTIONS = 4;
 const Y_AXIS_WIDTH = 48;
 const EDGE_SPACING = 8;
 const MAX_VISIBLE_POINTS = 12;
+const MAX_PLOTTED_POINTS = 60;
 const MAX_X_LABELS = 5;
 const AREA_START_OPACITY = 0.25;
 const AREA_END_OPACITY = 0.02;
@@ -26,7 +27,7 @@ export interface BalanceLineChartProps {
   testID?: string;
 }
 
-export function BalanceLineChart({
+export const BalanceLineChart = memo(function BalanceLineChart({
   data,
   title,
   height = 200,
@@ -47,16 +48,20 @@ export function BalanceLineChart({
         data.map((item) => item.balance),
         SECTIONS
       );
-      const labelled = labelPositions(data.length, MAX_X_LABELS);
-      const items: lineDataItem[] = data.map((item, index) => ({
+      const plotted =
+        data.length > MAX_PLOTTED_POINTS
+          ? evenPositions(data.length, MAX_PLOTTED_POINTS).map((index) => data[index])
+          : data;
+      const labelled = labelPositions(plotted.length, MAX_X_LABELS);
+      const items: lineDataItem[] = plotted.map((item, index) => ({
         value: item.balance,
         label: labelled.has(index) ? formatDayShort(item.date) : '',
-        hideDataPoint: data.length > MAX_VISIBLE_POINTS,
+        hideDataPoint: plotted.length > MAX_VISIBLE_POINTS,
       }));
 
       return {
         points: items,
-        spacing: (plotWidth - EDGE_SPACING * 2) / Math.max(data.length - 1, 1),
+        spacing: (plotWidth - EDGE_SPACING * 2) / Math.max(plotted.length - 1, 1),
         ...scale,
       };
     }, [data, plotWidth]);
@@ -127,7 +132,7 @@ export function BalanceLineChart({
       />
     </ChartFrame>
   );
-}
+});
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({

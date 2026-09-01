@@ -5,28 +5,38 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { TransactionProvider } from '../src/contexts/TransactionContext';
 import { ThemeProvider } from '../src/theme';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 
 LogBox.ignoreLogs(['Could not reach Cloud Firestore backend']);
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthGate() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const splashHiddenRef = useRef(false);
 
   useEffect(() => {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!user && !inAuthGroup) router.replace('/(auth)/login');
-    else if (user && inAuthGroup) router.replace('/(app)/(tabs)');
+    if (!user && !inAuthGroup) {
+      router.replace('/(auth)/login');
+      return;
+    }
 
-    SplashScreen.hideAsync();
+    if (user && inAuthGroup) {
+      router.replace('/(app)/(tabs)');
+      return;
+    }
+
+    if (splashHiddenRef.current) return;
+    splashHiddenRef.current = true;
+    SplashScreen.hideAsync().catch(() => {});
   }, [user, loading, segments, router]);
 
   if (loading) return null;

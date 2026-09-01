@@ -3,7 +3,14 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Transaction } from '../domain';
-import { TRANSACTION_TYPE } from '../domain';
+import {
+  balanceOverTime,
+  byCategory,
+  byMonth,
+  topCategory,
+  totals,
+  TRANSACTION_TYPE,
+} from '../domain';
 import { useDashboardData } from './useDashboardData';
 
 const transactionContextMock = vi.hoisted(() => ({
@@ -13,6 +20,21 @@ const transactionContextMock = vi.hoisted(() => ({
 vi.mock('../contexts/TransactionContext', () => ({
   useTransactions: transactionContextMock.useTransactions,
 }));
+
+vi.mock('../domain', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../domain')>();
+
+  return {
+    ...actual,
+    balanceOverTime: vi.fn(actual.balanceOverTime),
+    byCategory: vi.fn(actual.byCategory),
+    byMonth: vi.fn(actual.byMonth),
+    topCategory: vi.fn(actual.topCategory),
+    totals: vi.fn(actual.totals),
+  };
+});
+
+const aggregations = [balanceOverTime, byCategory, byMonth, topCategory, totals];
 
 const transactions: Transaction[] = [
   {
@@ -110,6 +132,41 @@ describe('useDashboardData', () => {
       date: '2026-08-06',
       balance: 2550,
     });
+  });
+
+  it('não recomputa as agregações quando só a identidade do contexto muda', () => {
+    const refresh = vi.fn();
+    transactionContextMock.useTransactions.mockImplementation(() => ({
+      items: transactions,
+      loading: false,
+      error: null,
+      refresh,
+    }));
+    aggregations.forEach((aggregation) => vi.mocked(aggregation).mockClear());
+
+    renderProbe();
+
+    aggregations.forEach((aggregation) => expect(aggregation).toHaveBeenCalledTimes(1));
+
+    act(() => {
+      renderer?.update(<DashboardDataProbe />);
+      renderer?.update(<DashboardDataProbe />);
+    });
+
+    aggregations.forEach((aggregation) => expect(aggregation).toHaveBeenCalledTimes(1));
+
+    transactionContextMock.useTransactions.mockImplementation(() => ({
+      items: [...transactions],
+      loading: false,
+      error: null,
+      refresh,
+    }));
+
+    act(() => {
+      renderer?.update(<DashboardDataProbe />);
+    });
+
+    aggregations.forEach((aggregation) => expect(aggregation).toHaveBeenCalledTimes(2));
   });
 
   it('exposes the empty state and context status for an empty list', () => {

@@ -1,5 +1,13 @@
 import type { User } from 'firebase/auth';
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { authService } from '../services/auth.service';
 
@@ -26,17 +34,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const value: AuthState = {
-    user,
-    loading,
-    signIn: async (email, password) => {
-      await authService.signIn(email, password);
-    },
-    signUp: async (email, password, name) => {
-      await authService.signUp(email, password, name);
-    },
-    signOut: () => authService.signOut(),
-  };
+  const signIn = useCallback(async (email: string, password: string) => {
+    await authService.signIn(email, password);
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string, name: string) => {
+    await authService.signUp(email, password, name);
+  }, []);
+
+  const signOut = useCallback(() => authService.signOut(), []);
+
+  const value = useMemo<AuthState>(
+    () => ({ user, loading, signIn, signUp, signOut }),
+    [loading, signIn, signOut, signUp, user]
+  );
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
