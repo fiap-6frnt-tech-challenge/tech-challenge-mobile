@@ -22,7 +22,7 @@
 
 | #   | Status | Task                                                                   | Owner | Duração | Arquivo                                                  |
 | --- | ------ | ---------------------------------------------------------------------- | ----- | ------- | -------------------------------------------------------- |
-| 01  | ⏳     | Auditoria de acessibilidade                                            | Dev 2 | 1.5 dia | [01-accessibility-audit.md](./01-accessibility-audit.md) |
+| 01  | 🟢     | Auditoria de acessibilidade                                            | Dev 1 | 1.5 dia | [01-accessibility-audit.md](./01-accessibility-audit.md) |
 | 02  | 🟢     | Performance (FlatList, memo, imagens, cold start)                      | Dev 3 | 1.5 dia | [02-performance.md](./02-performance.md)                 |
 | 03  | ⏳     | EAS Build config + APK Android                                         | Dev 1 | 1.5 dia | [03-eas-build.md](./03-eas-build.md)                     |
 | 04  | 🟢     | README final: Firebase, `.env`, deps, Storybook, busca e passos locais | Dev 1 | 1 dia   | [04-readme.md](./04-readme.md)                           |
@@ -36,9 +36,9 @@
 
 ## Critério de aceite do sprint
 
-- [ ] Todos os elementos interativos têm `accessibilityLabel` e `accessibilityRole`
-- [ ] Contraste AA nos componentes principais
-- [ ] `reduce-motion` respeitado nas animações quando aplicável
+- [x] Todos os elementos interativos têm `accessibilityLabel` e `accessibilityRole`
+- [x] Contraste AA nos componentes principais
+- [x] `reduce-motion` respeitado nas animações quando aplicável
 - [ ] Lista com muitos itens continua fluida
 - [ ] Imagens/anexos não degradam a experiência
 - [ ] Storybook abre e documenta DS base, forms, filtros, anexos, KPIs e gráficos
