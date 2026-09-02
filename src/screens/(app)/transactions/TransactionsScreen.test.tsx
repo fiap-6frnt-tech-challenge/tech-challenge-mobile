@@ -377,7 +377,8 @@ describe('TransactionsScreen', () => {
     const tree = renderScreen();
 
     const footer = findByTestId(tree, 'transactions-footer-error');
-    expect(footer).toBeDefined();
+    const announcement = footer.find((node) => node.props.accessibilityLiveRegion === 'polite');
+    expect(announcement.props.accessibilityRole).toBe('alert');
 
     act(() => tree.root.findByProps({ title: 'Tentar novamente' }).props.onPress());
     expect(hookMocks.loadMore).toHaveBeenCalledTimes(1);

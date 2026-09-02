@@ -120,7 +120,7 @@ export function DatePicker({
         <Text style={displayValue ? styles.value : styles.placeholder}>
           {displayValue ?? placeholder}
         </Text>
-        <Calendar size={20} color={theme.colors.iconSecondary} />
+        <Calendar size={20} color={theme.colors.iconSecondary} accessible={false} />
       </Pressable>
       {error ? (
         <Text
@@ -151,8 +151,12 @@ export function DatePicker({
             accessibilityLabel="Fechar seletor de data"
             accessibilityRole="button"
           />
-          <View style={styles.sheet}>
-            {label ? <Text style={styles.sheetTitle}>{label}</Text> : null}
+          <View style={styles.sheet} accessibilityViewIsModal>
+            {label ? (
+              <Text style={styles.sheetTitle} accessibilityRole="header">
+                {label}
+              </Text>
+            ) : null}
             <DateTimePicker
               value={draftDate}
               mode="date"

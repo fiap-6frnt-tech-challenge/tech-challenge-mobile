@@ -83,7 +83,7 @@ export function Select<TValue extends string = string>({
         <Text style={selectedOption ? styles.value : styles.placeholder} numberOfLines={1}>
           {selectedOption ? selectedOption.label : placeholder}
         </Text>
-        <ChevronDown size={20} color={theme.colors.iconSecondary} />
+        <ChevronDown size={20} color={theme.colors.iconSecondary} accessible={false} />
       </Pressable>
       {error ? (
         <Text
@@ -102,8 +102,12 @@ export function Select<TValue extends string = string>({
           accessibilityLabel="Fechar seleção"
           accessibilityRole="button"
         />
-        <View style={styles.sheet}>
-          {label ? <Text style={styles.sheetTitle}>{label}</Text> : null}
+        <View style={styles.sheet} accessibilityViewIsModal>
+          {label ? (
+            <Text style={styles.sheetTitle} accessibilityRole="header">
+              {label}
+            </Text>
+          ) : null}
           <FlatList
             data={options}
             keyExtractor={(option) => option.value}
@@ -119,7 +123,9 @@ export function Select<TValue extends string = string>({
                   <Text style={isSelected ? styles.optionLabelSelected : styles.optionLabel}>
                     {item.label}
                   </Text>
-                  {isSelected ? <Check size={20} color={theme.colors.primary} /> : null}
+                  {isSelected ? (
+                    <Check size={20} color={theme.colors.primary} accessible={false} />
+                  ) : null}
                 </Pressable>
               );
             }}

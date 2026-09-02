@@ -232,7 +232,7 @@ export default function TransactionsScreen() {
   const listFooter =
     items.length === 0 ? null : error ? (
       <View style={styles.footerError} testID="transactions-footer-error">
-        <Text color="danger" accessibilityLiveRegion="polite">
+        <Text color="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">
           {error}
         </Text>
         <Button title="Tentar novamente" variant="secondary" onPress={handleRetry} />

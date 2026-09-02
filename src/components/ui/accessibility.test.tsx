@@ -17,6 +17,7 @@ import { Button } from './Button';
 import { Chip } from './Chip';
 import { CurrencyInput } from './CurrencyInput';
 import { DatePicker } from './DatePicker';
+import { FilterSheet } from './FilterSheet';
 import { SearchInput } from './SearchInput';
 import { SegmentedControl } from './SegmentedControl';
 import { Select } from './Select';
@@ -63,6 +64,7 @@ vi.mock('react-native', () => ({
   }) => (visible ? createElement('Modal', props, children) : null),
   Platform: { OS: 'ios' },
   Pressable: 'Pressable',
+  ScrollView: 'ScrollView',
   StyleSheet: {
     absoluteFill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
     create: <T,>(styles: T) => styles,
@@ -342,6 +344,45 @@ describe('shared control accessibility', () => {
     expect(previewCloseStyle.minHeight).toBeGreaterThanOrEqual(44);
     expect(previewCloseStyle.alignItems).toBe('center');
     expect(previewCloseStyle.justifyContent).toBe('center');
+  });
+
+  it('isolates visible sheets from background focus and keeps close actions readable', () => {
+    const tree = render(
+      <>
+        <Select
+          label="Categoria"
+          options={[{ label: 'Alimentação', value: 'food' }]}
+          onChange={vi.fn()}
+          testID="modal-select"
+        />
+        <DatePicker label="Data" onChange={vi.fn()} testID="modal-date" />
+        <AttachmentPicker onPick={vi.fn()} testID="modal-attachment" />
+        <FilterSheet visible onApply={vi.fn()} onClose={vi.fn()} testID="modal-filters" />
+      </>
+    );
+
+    act(() => nativePressable(tree, 'modal-select').props.onPress());
+    act(() => nativePressable(tree, 'modal-date').props.onPress());
+    act(() => nativePressable(tree, 'modal-attachment').props.onPress());
+
+    const modalViews = tree.root.findAll(
+      (node) => node.type === viewType && node.props.accessibilityViewIsModal === true
+    );
+    expect(modalViews).toHaveLength(4);
+
+    const closeLabels = tree.root
+      .findAllByType(pressableType)
+      .map((pressable) => pressable.props.accessibilityLabel)
+      .filter((label) => typeof label === 'string' && label.startsWith('Fechar'));
+
+    expect(closeLabels).toEqual(
+      expect.arrayContaining([
+        'Fechar seleção',
+        'Fechar seletor de data',
+        'Fechar opções de anexo',
+        'Fechar filtros',
+      ])
+    );
   });
 
   it('exposes interactive Chip state', () => {
