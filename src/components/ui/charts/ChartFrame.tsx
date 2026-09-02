@@ -30,7 +30,7 @@ export function ChartFrame({
   return (
     <View style={[styles.container, style]} testID={testID}>
       {title ? (
-        <Text variant="h2" style={styles.title}>
+        <Text variant="h2" style={styles.title} accessibilityRole="header">
           {title}
         </Text>
       ) : null}

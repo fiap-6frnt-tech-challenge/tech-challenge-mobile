@@ -47,6 +47,10 @@ vi.mock('react-native', () => ({
   useWindowDimensions: () => ({ width: 375, height: 812 }),
 }));
 
+vi.mock('@/src/hooks/useReduceMotion', () => ({
+  useReduceMotion: () => false,
+}));
+
 vi.mock('react-native-gifted-charts', () => ({
   BarChart: () => {
     renderCounts.barChart += 1;

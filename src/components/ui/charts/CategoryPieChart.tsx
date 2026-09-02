@@ -4,6 +4,7 @@ import { PieChart, type pieDataItem } from 'react-native-gifted-charts';
 import { Text } from '@/src/components/ui/Text';
 import { CATEGORY_LABEL_MAP } from '@/src/domain/categories';
 import type { CategoryAggregate } from '@/src/domain/transactions';
+import { useReduceMotion } from '@/src/hooks/useReduceMotion';
 import { useTheme, type Theme } from '@/src/theme';
 import { ChartFrame } from './ChartFrame';
 import { ChartLegend, type ChartLegendItem } from './ChartLegend';
@@ -28,6 +29,7 @@ export const CategoryPieChart = memo(function CategoryPieChart({
   testID,
 }: CategoryPieChartProps) {
   const theme = useTheme();
+  const reduceMotion = useReduceMotion();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const chartWidth = useChartWidth();
   const outerRadius = radius ?? Math.min(96, Math.floor(chartWidth / 2) - theme.spacing.xl);
@@ -79,7 +81,7 @@ export const CategoryPieChart = memo(function CategoryPieChart({
           innerCircleColor={theme.colors.surface}
           strokeColor={theme.colors.surface}
           strokeWidth={2}
-          isAnimated
+          isAnimated={!reduceMotion}
           animationDuration={400}
           centerLabelComponent={() => (
             <View style={styles.centerLabel}>
