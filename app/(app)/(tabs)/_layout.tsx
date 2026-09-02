@@ -6,11 +6,21 @@ export default function TabLayout() {
     <Tabs screenOptions={{ headerShown: false, tabBarShowLabel: false }}>
       <Tabs.Screen
         name="index"
-        options={{ tabBarIcon: ({ focused }) => <House opacity={focused ? 1 : 0.75} /> }}
+        options={{
+          title: 'Início',
+          tabBarAccessibilityLabel: 'Início',
+          tabBarIcon: ({ focused }) => <House opacity={focused ? 1 : 0.75} accessible={false} />,
+        }}
       />
       <Tabs.Screen
         name="transactions"
-        options={{ tabBarIcon: ({ focused }) => <ScrollText opacity={focused ? 1 : 0.75} /> }}
+        options={{
+          title: 'Transações',
+          tabBarAccessibilityLabel: 'Transações',
+          tabBarIcon: ({ focused }) => (
+            <ScrollText opacity={focused ? 1 : 0.75} accessible={false} />
+          ),
+        }}
       />
     </Tabs>
   );

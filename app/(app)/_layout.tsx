@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { TouchableOpacity } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { CircleUserRound } from 'lucide-react-native';
 
 export default function AppLayout() {
@@ -10,10 +10,16 @@ export default function AppLayout() {
         options={(props) => ({
           title: 'Bytebank',
           headerRight: () => (
-            //trocar para botão padrão do app
-            <TouchableOpacity className="p-2" onPress={() => props.navigation.navigate('profile')}>
-              <CircleUserRound size={28} />
-            </TouchableOpacity>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Abrir perfil"
+              onPress={() => props.navigation.navigate('profile')}
+              style={({ pressed }) => [
+                styles.profileButton,
+                pressed && styles.profileButtonPressed,
+              ]}>
+              <CircleUserRound size={28} accessible={false} />
+            </Pressable>
           ),
         })}
       />
@@ -23,3 +29,15 @@ export default function AppLayout() {
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  profileButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileButtonPressed: {
+    opacity: 0.65,
+  },
+});
