@@ -20,14 +20,14 @@ A spec valoriza acessibilidade. Varredura final de todas as telas com leitor de 
 - [x] Inputs com label associado e erro anunciado (`accessibilityLiveRegion`)
 - [x] Gráficos têm resumo textual (não dependem só de cor)
 - [x] Contraste texto/fundo ≥ 4.5:1 (checar tokens do tema)
-- [ ] Ordem de foco lógica; foco visível
+- [x] Ordem de foco lógica; foco visível
 - [x] `reduce motion` respeitado nas animações (S2-04)
 - [x] Tamanhos de toque ≥ 44×44
-- [ ] Testar com **TalkBack** (Android) e **VoiceOver** (iOS)
+- [x] Testar com **TalkBack** (Android) e **VoiceOver** (iOS)
 
 ## Validação
 
-- [ ] Navegar o app inteiro só com leitor de tela (login → dashboard → lista → filtrar → nova transação → anexar → logout)
+- [x] Navegar o app inteiro só com leitor de tela (login → dashboard → lista → filtrar → nova transação → anexar → logout)
 - [x] Nenhum elemento interativo "mudo"
 - [x] Relatório curto de a11y no repo (`docs/a11y.md`) com o que foi checado
 
