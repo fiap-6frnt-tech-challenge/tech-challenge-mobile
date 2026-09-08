@@ -1,11 +1,5 @@
-import {
-  createElement,
-  type ElementType,
-  type ReactElement,
-  type ReactNode,
-  type ReactTestInstance,
-} from 'react';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { createElement, type ElementType, type ReactElement, type ReactNode } from 'react';
+import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthFooterLink } from '@/src/components/features/auth/AuthFooterLink';

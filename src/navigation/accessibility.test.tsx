@@ -31,6 +31,8 @@ vi.mock('lucide-react-native', () => ({
 const stackScreenType = 'StackScreen' as unknown as ElementType;
 const tabsScreenType = 'TabsScreen' as unknown as ElementType;
 const pressableType = 'Pressable' as unknown as ElementType;
+const houseType = 'House' as unknown as ElementType;
+const scrollTextType = 'ScrollText' as unknown as ElementType;
 
 (
   globalThis as typeof globalThis & {
@@ -98,9 +100,9 @@ describe('navigation accessibility', () => {
     expect(transactions.props.options.tabBarAccessibilityLabel).toBe('Transações');
 
     const dashboardIcon = render(dashboard.props.options.tabBarIcon({ focused: true }));
-    expect(dashboardIcon.root.findByType('House').props.accessible).toBe(false);
+    expect(dashboardIcon.root.findByType(houseType).props.accessible).toBe(false);
 
     const transactionsIcon = render(transactions.props.options.tabBarIcon({ focused: false }));
-    expect(transactionsIcon.root.findByType('ScrollText').props.accessible).toBe(false);
+    expect(transactionsIcon.root.findByType(scrollTextType).props.accessible).toBe(false);
   });
 });
