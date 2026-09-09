@@ -26,7 +26,7 @@
 | 02  | 🟢     | Performance (FlatList, memo, imagens, cold start)                      | Dev 3 | 1.5 dia | [02-performance.md](./02-performance.md)                 |
 | 03  | ⏳     | EAS Build config + APK Android                                         | Dev 1 | 1.5 dia | [03-eas-build.md](./03-eas-build.md)                     |
 | 04  | 🟢     | README final: Firebase, `.env`, deps, Storybook, busca e passos locais | Dev 1 | 1 dia   | [04-readme.md](./04-readme.md)                           |
-| 05  | ⏳     | E2E/smoke dos fluxos críticos                                          | Dev 3 | 1 dia   | [05-e2e.md](./05-e2e.md)                                 |
+| 05  | 🟢     | E2E/smoke dos fluxos críticos                                          | Dev 3 | 1 dia   | [05-e2e.md](./05-e2e.md)                                 |
 | 06  | ⏳     | Vídeo demo <= 5 min                                                    | Todos | 1 dia   | [06-demo-video.md](./06-demo-video.md)                   |
 | 07  | ⏳     | Smoke final em clone limpo + tag `v1.0.0` + merge final                | Todos | 0.5 dia | [07-release.md](./07-release.md)                         |
 

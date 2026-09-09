@@ -1,0 +1,40 @@
+appId: com.bytebank.mobile
+name: helper-create-transaction
+---
+- tapOn:
+    id: '^transactions-fab$'
+- extendedWaitUntil:
+    visible:
+      id: '^transaction-add-form$'
+    timeout: 20000
+
+- tapOn:
+    id: '^transaction-add-form-amount$'
+- inputText: ${TX_AMOUNT_DIGITS}
+- hideKeyboard
+- assertVisible: ${TX_AMOUNT_MASKED}
+
+- tapOn:
+    id: '^transaction-add-form-description$'
+- inputText: ${TX_DESCRIPTION}
+- hideKeyboard
+
+- assertVisible:
+    id: '^transaction-add-form-category-suggestion$'
+- assertVisible: ${TX_CATEGORY_LABEL}
+
+- scrollUntilVisible:
+    element:
+      id: '^transaction-add-form-submit$'
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: '^transaction-add-form-submit$'
+
+- extendedWaitUntil:
+    visible:
+      id: '^transactions-list$'
+    timeout: 30000
+- extendedWaitUntil:
+    visible: ${TX_DESCRIPTION}
+    timeout: 30000

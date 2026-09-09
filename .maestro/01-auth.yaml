@@ -1,0 +1,70 @@
+appId: com.bytebank.mobile
+name: 01-auth
+tags:
+  - critico
+  - auth
+env:
+  E2E_EMAIL: dev@test.com
+  E2E_NAME: Maestro E2E
+  E2E_DEV_SERVER: 'http://.*:8081'
+---
+- evalScript: ${output.novoEmail = 'e2e-' + Math.floor(Math.random() * 1000000000) + '@bytebank.test'}
+
+- runFlow: helpers/ensure-logged-out.yaml
+
+- tapOn:
+    id: '^login-register-link$'
+- extendedWaitUntil:
+    visible:
+      id: '^register-screen$'
+    timeout: 20000
+
+- tapOn:
+    id: '^register-name$'
+- inputText: ${E2E_NAME}
+- hideKeyboard
+- tapOn:
+    id: '^register-email$'
+- inputText: ${output.novoEmail}
+- hideKeyboard
+- tapOn:
+    id: '^register-password$'
+- inputText: ${E2E_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: '^register-confirm$'
+- inputText: ${E2E_PASSWORD}
+- hideKeyboard
+
+- scrollUntilVisible:
+    element:
+      id: '^register-submit$'
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: '^register-submit$'
+
+- extendedWaitUntil:
+    visible:
+      id: '^dashboard-empty$'
+    timeout: 60000
+- assertVisible: 'Seu dashboard começa aqui'
+
+- runFlow: helpers/logout.yaml
+
+- tapOn:
+    id: '^login-email$'
+- inputText: ${output.novoEmail}
+- hideKeyboard
+- tapOn:
+    id: '^login-password$'
+- inputText: ${E2E_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: '^login-submit$'
+
+- extendedWaitUntil:
+    visible: 'Abrir perfil'
+    timeout: 60000
+- assertNotVisible:
+    id: '^login-screen$'

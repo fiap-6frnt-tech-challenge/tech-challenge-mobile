@@ -1,0 +1,55 @@
+appId: com.bytebank.mobile
+name: 05-attachment
+tags:
+  - critico
+  - anexos
+env:
+  E2E_EMAIL: dev@test.com
+  E2E_DEV_SERVER: 'http://.*:8081'
+  E2E_ITEM_GALERIA: 'Photo taken on .*'
+  E2E_CONFIRMA_GALERIA: 'Done'
+---
+- runFlow: helpers/login.yaml
+- runFlow: helpers/open-transactions.yaml
+
+- tapOn:
+    id: '^transactions-fab$'
+- extendedWaitUntil:
+    visible:
+      id: '^transaction-add-form$'
+    timeout: 20000
+
+- scrollUntilVisible:
+    element:
+      id: '^transaction-add-form-attachment-picker$'
+    direction: DOWN
+    timeout: 20000
+- assertNotVisible:
+    id: '^transaction-add-form-attachments$'
+
+- tapOn:
+    id: '^transaction-add-form-attachment-picker$'
+- assertVisible: 'Tirar foto'
+- assertVisible: 'Escolher da galeria'
+- assertVisible: 'Escolher arquivo'
+
+- tapOn:
+    id: '^transaction-add-form-attachment-picker-library$'
+
+- extendedWaitUntil:
+    visible: ${E2E_ITEM_GALERIA}
+    timeout: 40000
+- tapOn:
+    text: ${E2E_ITEM_GALERIA}
+    index: 0
+
+- runFlow:
+    when:
+      visible: ${E2E_CONFIRMA_GALERIA}
+    commands:
+      - tapOn: ${E2E_CONFIRMA_GALERIA}
+
+- extendedWaitUntil:
+    visible:
+      id: '^transaction-add-form-attachments$'
+    timeout: 60000

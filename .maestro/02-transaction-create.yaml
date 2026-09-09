@@ -1,0 +1,26 @@
+appId: com.bytebank.mobile
+name: 02-transaction-create
+tags:
+  - critico
+  - transacoes
+env:
+  E2E_EMAIL: dev@test.com
+  E2E_DEV_SERVER: 'http://.*:8081'
+---
+- evalScript: ${output.desc = 'Uber E2E ' + Math.floor(Math.random() * 1000000000)}
+
+- runFlow: helpers/login.yaml
+- runFlow: helpers/open-transactions.yaml
+
+- runFlow:
+    file: helpers/create-transaction.yaml
+    env:
+      TX_DESCRIPTION: ${output.desc}
+      TX_AMOUNT_DIGITS: '5000'
+      TX_AMOUNT_MASKED: 'R\$ 50,00'
+      TX_CATEGORY_LABEL: 'Transporte'
+
+- runFlow:
+    file: helpers/delete-transaction.yaml
+    env:
+      TX_DESCRIPTION: ${output.desc}

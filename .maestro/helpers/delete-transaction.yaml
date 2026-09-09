@@ -1,0 +1,27 @@
+appId: com.bytebank.mobile
+name: helper-delete-transaction
+---
+- tapOn: ${TX_DESCRIPTION}
+- extendedWaitUntil:
+    visible:
+      id: '^transaction-details-form$'
+    timeout: 20000
+
+- scrollUntilVisible:
+    element:
+      id: '^transaction-delete$'
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: '^transaction-delete$'
+
+- assertVisible: 'Essa ação não pode ser desfeita.'
+- tapOn: '^Excluir$'
+
+- extendedWaitUntil:
+    visible:
+      id: '^transactions-list$'
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible: ${TX_DESCRIPTION}
+    timeout: 30000
