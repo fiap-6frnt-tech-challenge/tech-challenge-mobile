@@ -98,7 +98,7 @@ export function SearchInput({
         {showClear ? (
           <Pressable
             onPress={handleClear}
-            hitSlop={theme.spacing.sm}
+            hitSlop={14}
             accessibilityRole="button"
             accessibilityLabel="Limpar busca"
             testID={testID ? `${testID}-clear` : undefined}
@@ -124,6 +124,7 @@ export function SearchInput({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     field: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.sm,

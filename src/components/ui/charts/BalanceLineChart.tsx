@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { LineChart, type lineDataItem } from 'react-native-gifted-charts';
 import type { BalancePoint } from '@/src/domain';
+import { useReduceMotion } from '@/src/hooks/useReduceMotion';
 import { useTheme, type Theme } from '@/src/theme';
 import { ChartFrame } from './ChartFrame';
 import { axisLabels, formatCurrency, formatDayFull, formatDayShort } from './format';
@@ -37,6 +38,7 @@ export const BalanceLineChart = memo(function BalanceLineChart({
   testID,
 }: BalanceLineChartProps) {
   const theme = useTheme();
+  const reduceMotion = useReduceMotion();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const chartWidth = useChartWidth(width);
   const plotWidth = chartWidth - Y_AXIS_WIDTH;
@@ -125,7 +127,7 @@ export const BalanceLineChart = memo(function BalanceLineChart({
         xAxisThickness={1}
         rulesColor={theme.charts.grid}
         rulesThickness={1}
-        isAnimated
+        isAnimated={!reduceMotion}
         animationDuration={400}
         disableScroll
         showScrollIndicator={false}

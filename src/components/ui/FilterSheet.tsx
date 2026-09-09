@@ -91,8 +91,8 @@ export function FilterSheet({
         accessibilityRole="button"
         testID={testID ? `${testID}-backdrop` : undefined}
       />
-      <View style={styles.sheet} testID={testID}>
-        <View style={styles.handle} />
+      <View style={styles.sheet} accessibilityViewIsModal testID={testID}>
+        <View style={styles.handle} accessible={false} />
         <Text variant="h2" style={styles.title} accessibilityRole="header">
           {title}
         </Text>

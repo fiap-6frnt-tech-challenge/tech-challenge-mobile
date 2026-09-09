@@ -41,6 +41,7 @@ function createStyles(theme: Theme) {
       gap: theme.spacing.xs,
     },
     linkPressable: {
+      minHeight: 44,
       paddingVertical: theme.spacing.sm,
       paddingHorizontal: theme.spacing.xs,
     },

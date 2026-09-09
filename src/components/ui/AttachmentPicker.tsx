@@ -98,7 +98,7 @@ export function AttachmentPicker({
           (disabled || pending) && styles.triggerDisabled,
           triggerPressed && !disabled && !pending && styles.pressed,
         ]}>
-        <Paperclip size={20} color={theme.colors.primary} />
+        <Paperclip size={20} color={theme.colors.primary} accessible={false} />
         <Text style={styles.triggerLabel}>{pending ? 'Abrindo…' : label}</Text>
       </Pressable>
 
@@ -120,7 +120,7 @@ export function AttachmentPicker({
           accessibilityLabel="Fechar opções de anexo"
           accessibilityRole="button"
         />
-        <View style={styles.sheet}>
+        <View style={styles.sheet} accessibilityViewIsModal>
           <Text variant="h2" style={styles.sheetTitle} accessibilityRole="header">
             {label}
           </Text>
@@ -134,7 +134,7 @@ export function AttachmentPicker({
               testID={testID ? `${testID}-${id}` : undefined}
               android_ripple={{ color: theme.colors.surfaceHover }}
               style={styles.option}>
-              <Icon size={20} color={theme.colors.iconDefault} />
+              <Icon size={20} color={theme.colors.iconDefault} accessible={false} />
               <Text style={styles.optionLabel}>{optionLabel}</Text>
             </Pressable>
           ))}
@@ -155,6 +155,7 @@ export function AttachmentPicker({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     trigger: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -183,6 +184,7 @@ function createStyles(theme: Theme) {
     },
     sheetTitle: { color: theme.colors.text, marginBottom: theme.spacing.md },
     option: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.md,

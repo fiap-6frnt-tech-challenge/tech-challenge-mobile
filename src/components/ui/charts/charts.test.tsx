@@ -1,7 +1,7 @@
 import { createElement, type ReactElement } from 'react';
 import { Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BalancePoint } from '@/src/domain';
 import { ThemeProvider } from '@/src/theme';
@@ -24,22 +24,31 @@ vi.mock('react-native', () => ({
   useWindowDimensions: () => ({ width: 375, height: 812 }),
 }));
 
+let reducedMotion = false;
+
+vi.mock('@/src/hooks/useReduceMotion', () => ({
+  useReduceMotion: () => reducedMotion,
+}));
+
 vi.mock('react-native-gifted-charts', () => ({
-  BarChart: ({ data }: { data: unknown[] }) =>
+  BarChart: ({ data, isAnimated }: { data: unknown[]; isAnimated?: boolean }) =>
     createElement('View', {
       testID: 'mock-bar-chart',
       accessibilityLabel: `bar chart: ${data.length} bars`,
+      isAnimated,
     }),
-  LineChart: ({ data }: { data: unknown[] }) =>
+  LineChart: ({ data, isAnimated }: { data: unknown[]; isAnimated?: boolean }) =>
     createElement('View', {
       testID: 'mock-line-chart',
       accessibilityLabel: `line chart: ${data.length} points`,
       points: data,
+      isAnimated,
     }),
-  PieChart: ({ data }: { data: unknown[] }) =>
+  PieChart: ({ data, isAnimated }: { data: unknown[]; isAnimated?: boolean }) =>
     createElement('View', {
       testID: 'mock-pie-chart',
       accessibilityLabel: `pie chart: ${data.length} slices`,
+      isAnimated,
     }),
 }));
 
@@ -53,6 +62,59 @@ function renderChart(element: ReactElement) {
 }
 
 describe('dashboard charts', () => {
+  beforeEach(() => {
+    reducedMotion = false;
+  });
+
+  it('animates all chart primitives by default', () => {
+    const tree = renderChart(
+      <>
+        <ExpenseBarChart data={monthlyFixture} />
+        <CategoryPieChart data={categoryShortFixture} />
+        <BalanceLineChart data={balanceFixture} />
+      </>
+    );
+
+    expect(tree.root.findByProps({ testID: 'mock-bar-chart' }).props.isAnimated).toBe(true);
+    expect(tree.root.findByProps({ testID: 'mock-pie-chart' }).props.isAnimated).toBe(true);
+    expect(tree.root.findByProps({ testID: 'mock-line-chart' }).props.isAnimated).toBe(true);
+  });
+
+  it('disables every chart animation when reduced motion is enabled', () => {
+    reducedMotion = true;
+    const tree = renderChart(
+      <>
+        <ExpenseBarChart data={monthlyFixture} />
+        <CategoryPieChart data={categoryShortFixture} />
+        <BalanceLineChart data={balanceFixture} />
+      </>
+    );
+
+    expect(tree.root.findByProps({ testID: 'mock-bar-chart' }).props.isAnimated).toBe(false);
+    expect(tree.root.findByProps({ testID: 'mock-pie-chart' }).props.isAnimated).toBe(false);
+    expect(tree.root.findByProps({ testID: 'mock-line-chart' }).props.isAnimated).toBe(false);
+  });
+
+  it('exposes chart titles as headers and detailed image summaries', () => {
+    const tree = renderChart(
+      <>
+        <ExpenseBarChart data={monthlyFixture} title="Receita x Despesa" />
+        <CategoryPieChart data={categoryShortFixture} title="Gastos por categoria" />
+        <BalanceLineChart data={balanceFixture} title="Evolução do saldo" />
+      </>
+    );
+
+    const headers = tree.root.findAll(
+      (node) => node.type === Text && node.props.accessibilityRole === 'header'
+    );
+    expect(headers).toHaveLength(3);
+
+    const summaries = tree.root.findAllByProps({ accessibilityRole: 'image' });
+    expect(summaries).toHaveLength(3);
+    expect(summaries[0].props.accessibilityLabel).toMatch(/receitas.+despesas.+R\$/i);
+    expect(summaries[1].props.accessibilityLabel).toMatch(/total.+Alimentação.+%/i);
+    expect(summaries[2].props.accessibilityLabel).toMatch(/saldo inicial.+saldo final.+tendência/i);
+  });
   it('mounts the income versus expense bar chart with a fixture', () => {
     const tree = renderChart(
       <ExpenseBarChart data={monthlyFixture} title="Receita × Despesa" testID="bar-chart" />

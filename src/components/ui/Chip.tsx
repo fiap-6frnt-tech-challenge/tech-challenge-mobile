@@ -59,7 +59,7 @@ export function Chip({
         <Pressable
           onPress={disabled ? undefined : onRemove}
           disabled={disabled}
-          hitSlop={theme.spacing.sm}
+          hitSlop={15}
           accessibilityRole="button"
           accessibilityLabel={removeAccessibilityLabel ?? `Remover ${label}`}
           accessibilityState={{ disabled }}
@@ -106,6 +106,7 @@ export function Chip({
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     chip: {
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'flex-start',
@@ -125,6 +126,12 @@ function createStyles(theme: Theme) {
     pressed: { opacity: 0.7 },
     label: { color: theme.colors.text, flexShrink: 1 },
     labelSelected: { color: theme.colors.primary, fontWeight: '600' },
-    removeButton: { alignItems: 'center', justifyContent: 'center' },
+    removeButton: {
+      width: 32,
+      height: 32,
+      marginVertical: -2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 }

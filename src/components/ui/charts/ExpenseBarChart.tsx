@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { BarChart, type barDataItem } from 'react-native-gifted-charts';
+import { useReduceMotion } from '@/src/hooks/useReduceMotion';
 import { useTheme, type Theme } from '@/src/theme';
 import type { MonthlyAggregate } from '@/src/domain';
 import { ChartFrame } from './ChartFrame';
@@ -40,6 +41,7 @@ export const ExpenseBarChart = memo(function ExpenseBarChart({
   testID,
 }: ExpenseBarChartProps) {
   const theme = useTheme();
+  const reduceMotion = useReduceMotion();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const chartWidth = useChartWidth(width);
 
@@ -125,7 +127,7 @@ export const ExpenseBarChart = memo(function ExpenseBarChart({
         xAxisThickness={1}
         rulesColor={theme.charts.grid}
         rulesThickness={1}
-        isAnimated
+        isAnimated={!reduceMotion}
         animationDuration={400}
         disablePress
         disableScroll
