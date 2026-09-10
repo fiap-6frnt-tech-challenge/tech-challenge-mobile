@@ -1,0 +1,21 @@
+appId: com.bytebank.mobile
+name: helper-logout
+---
+- runFlow: dev-launcher.yaml
+
+- extendedWaitUntil:
+    visible: 'Abrir perfil'
+    timeout: 30000
+- tapOn: 'Abrir perfil'
+
+- extendedWaitUntil:
+    visible:
+      id: '^profile-signout$'
+    timeout: 30000
+- tapOn:
+    id: '^profile-signout$'
+
+- extendedWaitUntil:
+    visible:
+      id: '^login-screen$'
+    timeout: 30000

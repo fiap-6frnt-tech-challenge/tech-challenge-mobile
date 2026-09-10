@@ -1,0 +1,31 @@
+appId: com.bytebank.mobile
+name: 04-infinite-scroll
+tags:
+  - critico
+  - paginacao
+env:
+  E2E_EMAIL: dev@test.com
+  E2E_DEV_SERVER: 'http://.*:8081'
+---
+- runFlow: helpers/login.yaml
+- runFlow: helpers/open-transactions.yaml
+
+- extendedWaitUntil:
+    visible: '^20 resultados$'
+    timeout: 30000
+
+- repeat:
+    times: 6
+    commands:
+      - scroll
+
+- scrollUntilVisible:
+    element:
+      id: '^transactions-filters-header$'
+    direction: UP
+    timeout: 40000
+
+- extendedWaitUntil:
+    notVisible: '^20 resultados$'
+    timeout: 30000
+- assertVisible: '^[0-9]+ resultados$'

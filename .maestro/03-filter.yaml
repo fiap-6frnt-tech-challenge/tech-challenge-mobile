@@ -1,0 +1,53 @@
+appId: com.bytebank.mobile
+name: 03-filter
+tags:
+  - critico
+  - filtros
+env:
+  E2E_EMAIL: dev@test.com
+  E2E_DEV_SERVER: 'http://.*:8081'
+---
+- evalScript: ${output.desc = 'Uber E2E filtro ' + Math.floor(Math.random() * 1000000000)}
+
+- runFlow: helpers/login.yaml
+- runFlow: helpers/open-transactions.yaml
+
+- runFlow:
+    file: helpers/create-transaction.yaml
+    env:
+      TX_DESCRIPTION: ${output.desc}
+      TX_AMOUNT_DIGITS: '5000'
+      TX_AMOUNT_MASKED: 'R\$ 50,00'
+      TX_CATEGORY_LABEL: 'Transporte'
+
+- tapOn:
+    id: '^transactions-filter-button$'
+- extendedWaitUntil:
+    visible:
+      id: '^transactions-filter-sheet$'
+    timeout: 20000
+- tapOn:
+    id: '^transactions-filter-sheet-category-food$'
+- tapOn:
+    id: '^transactions-filter-sheet-apply$'
+
+- extendedWaitUntil:
+    visible:
+      id: '^transactions-active-filters$'
+    timeout: 20000
+- assertVisible:
+    id: '^transactions-filter-category:food$'
+- assertNotVisible: ${output.desc}
+
+- tapOn:
+    id: '^transactions-clear-filters$'
+- extendedWaitUntil:
+    visible: ${output.desc}
+    timeout: 30000
+- assertNotVisible:
+    id: '^transactions-active-filters$'
+
+- runFlow:
+    file: helpers/delete-transaction.yaml
+    env:
+      TX_DESCRIPTION: ${output.desc}
