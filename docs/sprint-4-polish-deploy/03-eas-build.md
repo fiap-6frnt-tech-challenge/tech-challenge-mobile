@@ -1,4 +1,4 @@
-# Task 03 — EAS Build config + APK Android
+# Task 03 — EAS Build config + APK Android ✅
 
 | | |
 | --- | --- |
@@ -45,10 +45,10 @@ Baixar o APK do link do EAS e instalar num device.
 
 ## Validação
 
-- [ ] `eas build -p android --profile preview` conclui com sucesso
-- [ ] APK instala e abre num device Android real
-- [ ] App buildado conecta ao Firebase (login, Firestore, upload funcionam)
-- [ ] Link/arquivo do APK anexado à entrega
+- [X] `eas build -p android --profile preview` conclui com sucesso
+- [X] APK instala e abre num device Android real
+- [X] App buildado conecta ao Firebase (login, Firestore, upload funcionam)
+- [X] Link/arquivo do APK anexado à entrega
 
 ## Gotchas
 
