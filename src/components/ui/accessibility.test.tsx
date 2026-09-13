@@ -409,4 +409,24 @@ describe('shared control accessibility', () => {
     expect(link.props.accessibilityLabel).toBe('Entrar');
     expect(flattenStyle(link.props.style).minHeight).toBeGreaterThanOrEqual(44);
   });
+
+  it('calls AuthFooterLink onPress without wrapping it in a router Link', () => {
+    const onPress = vi.fn();
+    const tree = render(
+      <AuthFooterLink
+        prompt="Já tem uma conta?"
+        label="Entrar"
+        onPress={onPress}
+        testID="auth-footer-link"
+      />
+    );
+    const link = tree.root.findByType(pressableType);
+
+    expect(tree.root.findAllByType('Link' as unknown as ElementType)).toHaveLength(0);
+    expect(link.props.accessibilityRole).toBe('link');
+
+    act(() => link.props.onPress());
+
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
 });

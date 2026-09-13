@@ -34,6 +34,11 @@ export default function RegisterScreen() {
     mode: 'onTouched',
   });
 
+  const goToLogin = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/login');
+  };
+
   const onSubmit = handleSubmit(async ({ name, email, password }) => {
     setFormError(null);
     try {
@@ -159,7 +164,7 @@ export default function RegisterScreen() {
       <AuthFooterLink
         prompt="Já tem uma conta?"
         label="Entrar"
-        href="/login"
+        onPress={goToLogin}
         testID="register-login-link"
       />
     </AuthScreenLayout>
