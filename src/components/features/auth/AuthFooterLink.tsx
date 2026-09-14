@@ -4,29 +4,40 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/src/components/ui/Text';
 import { useTheme, type Theme } from '@/src/theme';
 
-export interface AuthFooterLinkProps {
+interface AuthFooterLinkBaseProps {
   prompt: string;
   label: string;
-  href: LinkProps['href'];
   testID?: string;
 }
 
-export function AuthFooterLink({ prompt, label, href, testID }: AuthFooterLinkProps) {
+export type AuthFooterLinkProps = AuthFooterLinkBaseProps &
+  ({ href: LinkProps['href']; onPress?: never } | { onPress: () => void; href?: never });
+
+export function AuthFooterLink({ prompt, label, href, onPress, testID }: AuthFooterLinkProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const pressable = (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={styles.linkPressable}
+      testID={testID}>
+      <Text style={styles.link}>{label}</Text>
+    </Pressable>
+  );
 
   return (
     <View style={styles.container}>
       <Text color="textSecondary">{prompt}</Text>
-      <Link href={href} asChild>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={label}
-          style={styles.linkPressable}
-          testID={testID}>
-          <Text style={styles.link}>{label}</Text>
-        </Pressable>
-      </Link>
+      {href ? (
+        <Link href={href} asChild>
+          {pressable}
+        </Link>
+      ) : (
+        pressable
+      )}
     </View>
   );
 }
