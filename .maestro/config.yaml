@@ -1,0 +1,11 @@
+flows:
+  - '*.yaml'
+
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - 01-auth
+    - 02-transaction-create
+    - 03-filter
+    - 04-infinite-scroll
+    - 05-attachment

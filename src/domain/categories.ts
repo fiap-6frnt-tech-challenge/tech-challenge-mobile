@@ -1,0 +1,98 @@
+export const CATEGORIES = [
+  {
+    id: 'food',
+    label: 'Alimentação',
+    icon: 'utensils',
+    keywords: ['restaurante', 'pizza', 'mercado', 'ifood', 'lanche', 'refeição', 'almoço'],
+  },
+  {
+    id: 'transport',
+    label: 'Transporte',
+    icon: 'car',
+    keywords: [
+      'uber',
+      '99',
+      'metrô',
+      'metro',
+      'ônibus',
+      'onibus',
+      'combustível',
+      'combustivel',
+      'gasolina',
+      'estacionamento',
+      'táxi',
+      'taxi',
+    ],
+  },
+  {
+    id: 'leisure',
+    label: 'Lazer',
+    icon: 'ticket',
+    keywords: ['cinema', 'netflix', 'spotify', 'show', 'jogo', 'ingresso', 'steam'],
+  },
+  {
+    id: 'health',
+    label: 'Saúde',
+    icon: 'heart-pulse',
+    keywords: [
+      'farmácia',
+      'farmacia',
+      'médico',
+      'medico',
+      'consulta',
+      'remédio',
+      'remedio',
+      'plano de saúde',
+      'plano de saude',
+      'dentista',
+    ],
+  },
+  {
+    id: 'education',
+    label: 'Educação',
+    icon: 'graduation-cap',
+    keywords: ['curso', 'livro', 'faculdade', 'escola', 'mensalidade', 'fiap'],
+  },
+  {
+    id: 'housing',
+    label: 'Moradia',
+    icon: 'home',
+    keywords: [
+      'aluguel',
+      'condomínio',
+      'condominio',
+      'luz',
+      'água',
+      'agua',
+      'internet',
+      'energia',
+      'gás',
+      'gas',
+    ],
+  },
+  {
+    id: 'salary',
+    label: 'Salário',
+    icon: 'wallet',
+    keywords: ['salário', 'salario', 'pagamento', 'pix recebido', 'holerite', 'freelance'],
+  },
+  {
+    id: 'transfer',
+    label: 'Transferência',
+    icon: 'repeat',
+    keywords: ['transferência', 'transferencia', 'pix enviado', 'ted', 'doc'],
+  },
+  {
+    id: 'other',
+    label: 'Outros',
+    icon: 'circle-ellipsis',
+    keywords: [],
+  },
+] as const;
+
+export type CategoryId = (typeof CATEGORIES)[number]['id'];
+export type Category = (typeof CATEGORIES)[number];
+
+export const CATEGORY_LABEL_MAP = Object.fromEntries(
+  CATEGORIES.map((category) => [category.id, category.label])
+) as Record<CategoryId, string>;

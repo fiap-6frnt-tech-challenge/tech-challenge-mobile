@@ -1,0 +1,27 @@
+appId: com.bytebank.mobile
+name: helper-dev-launcher
+---
+- runFlow:
+    when:
+      visible: 'Development Build'
+    commands:
+      - tapOn: ${E2E_DEV_SERVER}
+      - extendedWaitUntil:
+          notVisible: 'Development Build'
+          timeout: 120000
+
+- runFlow:
+    when:
+      visible: 'This is the developer menu.*'
+    commands:
+      - tapOn: '^Continue$'
+
+- runFlow:
+    when:
+      visible: 'Toggle element inspector'
+    commands:
+      - tapOn:
+          point: '50%,8%'
+      - extendedWaitUntil:
+          notVisible: 'Toggle element inspector'
+          timeout: 20000

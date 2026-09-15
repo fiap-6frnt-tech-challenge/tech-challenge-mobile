@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /receipts/{uid}/{transactionId}/{fileName} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      function isAllowedReceipt() {
+        return request.resource.size <= 5 * 1024 * 1024
+          && request.resource.contentType.matches(
+            'image/(jpeg|png|webp)|application/pdf'
+          );
+      }
+
+      allow read: if isOwner();
+      allow create, update: if isOwner() && isAllowedReceipt();
+      allow delete: if isOwner();
+    }
+  }
+}

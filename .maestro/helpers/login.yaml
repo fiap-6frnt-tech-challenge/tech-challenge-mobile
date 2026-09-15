@@ -1,0 +1,23 @@
+appId: com.bytebank.mobile
+name: helper-login
+---
+- runFlow: ensure-logged-out.yaml
+
+- tapOn:
+    id: '^login-email$'
+- inputText: ${E2E_EMAIL}
+- hideKeyboard
+
+- tapOn:
+    id: '^login-password$'
+- inputText: ${E2E_PASSWORD}
+- hideKeyboard
+
+- tapOn:
+    id: '^login-submit$'
+
+- extendedWaitUntil:
+    visible: 'Abrir perfil'
+    timeout: 60000
+- assertNotVisible:
+    id: '^login-screen$'

@@ -1,9 +1,8 @@
 {
   "expo": {
-    "name": "bytebank-mobile",
+    "name": "Bytebank",
     "slug": "bytebank-mobile",
     "version": "1.0.0",
-
     "scheme": "bytebank-mobile",
     "platforms": ["ios", "android"],
     "web": {
@@ -19,28 +18,44 @@
           "image": "./assets/splash.png",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Bytebank usa suas fotos para anexar comprovantes às transações.",
+          "cameraPermission": "O Bytebank usa a câmera para fotografar comprovantes de transações."
+        }
+      ],
+      "expo-document-picker",
+      "./withAndroidAccentColor.js",
+      "expo-status-bar",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
-
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bytebank.mobile"
     },
     "android": {
+      "package": "com.bytebank.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "820c9232-596e-4552-9273-86096e86a9e0"
+      }
+    },
+    "owner": "bytebanks-team"
   }
 }

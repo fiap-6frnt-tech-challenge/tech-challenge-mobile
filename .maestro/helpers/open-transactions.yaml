@@ -1,0 +1,8 @@
+appId: com.bytebank.mobile
+name: helper-open-transactions
+---
+- tapOn: 'Transações'
+- extendedWaitUntil:
+    visible:
+      id: '^transactions-list$'
+    timeout: 30000

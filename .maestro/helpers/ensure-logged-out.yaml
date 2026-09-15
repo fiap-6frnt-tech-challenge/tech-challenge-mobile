@@ -1,0 +1,23 @@
+appId: com.bytebank.mobile
+name: helper-ensure-logged-out
+---
+- launchApp:
+    permissions:
+      all: allow
+- runFlow: dev-launcher.yaml
+
+- extendedWaitUntil:
+    visible: 'BYTEBANK|Abrir perfil'
+    timeout: 120000
+- runFlow: dev-launcher.yaml
+
+- runFlow:
+    when:
+      visible: 'Abrir perfil'
+    commands:
+      - runFlow: logout.yaml
+
+- extendedWaitUntil:
+    visible:
+      id: '^login-screen$'
+    timeout: 60000
