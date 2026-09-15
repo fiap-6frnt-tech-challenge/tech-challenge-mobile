@@ -190,7 +190,7 @@ O perfil `preview` em `eas.json` usa distribuição interna. Os valores Firebase
 
 - [APK Android (EAS, perfil `preview`)](https://expo.dev/artifacts/eas/fCGNBjyqKy5fyL9wY3eXmoudhMqQh5NKBOOILVL-Dpw.apk): download direto, sem login; instale num device Android permitindo apps de fontes desconhecidas.
 - [Builds Android (EAS)](https://expo.dev/accounts/bytebanks-team/projects/bytebank-mobile/builds): histórico de builds, exige login na conta Expo do time.
-- Vídeo demonstrativo: enquanto a S4-06 estiver incompleta, consulte [docs/sprint-4-polish-deploy/06-demo-video.md](docs/sprint-4-polish-deploy/06-demo-video.md). Quando o vídeo existir, a S4-06 substituirá esta nota pela URL pública imutável.
+- [Vídeo demonstrativo (YouTube)](https://www.youtube.com/watch?v=hfXLQWE8pTc): apresentação das funcionalidades do app.
 
 ## Solução de problemas
 
